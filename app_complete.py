@@ -82,8 +82,9 @@ def init_db():
         return False
 
 def get_week3_predictions():
-    """Get Week 3 predictions - these are already set"""
+    """Get Week 3 predictions - CORRECT Week 3 2024 NFL Schedule"""
     return [
+        # Thursday Night Game
         {
             'home_team': 'BUF',
             'away_team': 'MIA',
@@ -91,108 +92,110 @@ def get_week3_predictions():
             'confidence': 0.75,
             'injury_report': 'BUF: Matt Milano (LB) - OUT, Ed Oliver (DT) - OUT | MIA: Storm Duck (CB) - OUT'
         },
+        # Sunday Games
         {
-            'home_team': 'ATL',
-            'away_team': 'CAR',
-            'predicted_winner': 'ATL',
+            'home_team': 'TEN',
+            'away_team': 'IND',
+            'predicted_winner': 'IND',
             'confidence': 0.68,
             'injury_report': 'Both teams healthy'
         },
         {
-            'home_team': 'GB',
-            'away_team': 'CLE',
-            'predicted_winner': 'GB',
-            'confidence': 0.72,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'HOU',
-            'away_team': 'MIN',
-            'predicted_winner': 'HOU',
-            'confidence': 0.65,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'IND',
-            'away_team': 'CHI',
-            'predicted_winner': 'IND',
-            'confidence': 0.70,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'KC',
-            'away_team': 'ATL',
-            'predicted_winner': 'KC',
-            'confidence': 0.78,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'LV',
+            'home_team': 'NE',
             'away_team': 'PIT',
-            'predicted_winner': 'LV',
-            'confidence': 0.63,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'LAC',
-            'away_team': 'TEN',
-            'predicted_winner': 'LAC',
-            'confidence': 0.67,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'LA',
-            'away_team': 'SF',
-            'predicted_winner': 'SF',
-            'confidence': 0.73,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'NO',
-            'away_team': 'PHI',
-            'predicted_winner': 'PHI',
-            'confidence': 0.69,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'NYG',
-            'away_team': 'CLE',
-            'predicted_winner': 'CLE',
-            'confidence': 0.66,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'NYJ',
-            'away_team': 'NE',
-            'predicted_winner': 'NE',
-            'confidence': 0.64,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'SEA',
-            'away_team': 'DEN',
-            'predicted_winner': 'SEA',
-            'confidence': 0.71,
+            'predicted_winner': 'PIT',
+            'confidence': 0.72,
             'injury_report': 'Both teams healthy'
         },
         {
             'home_team': 'TB',
-            'away_team': 'GB',
+            'away_team': 'NYJ',
             'predicted_winner': 'TB',
-            'confidence': 0.68,
+            'confidence': 0.65,
             'injury_report': 'Both teams healthy'
         },
         {
             'home_team': 'WAS',
-            'away_team': 'CIN',
-            'predicted_winner': 'CIN',
-            'confidence': 0.72,
+            'away_team': 'LV',
+            'predicted_winner': 'LV',
+            'confidence': 0.70,
             'injury_report': 'Both teams healthy'
         },
         {
-            'home_team': 'ARI',
+            'home_team': 'PHI',
+            'away_team': 'LA',
+            'predicted_winner': 'PHI',
+            'confidence': 0.78,
+            'injury_report': 'Both teams healthy'
+        },
+        {
+            'home_team': 'CAR',
+            'away_team': 'ATL',
+            'predicted_winner': 'ATL',
+            'confidence': 0.63,
+            'injury_report': 'Both teams healthy'
+        },
+        {
+            'home_team': 'MIN',
+            'away_team': 'CIN',
+            'predicted_winner': 'CIN',
+            'confidence': 0.67,
+            'injury_report': 'Both teams healthy'
+        },
+        {
+            'home_team': 'JAX',
+            'away_team': 'HOU',
+            'predicted_winner': 'JAX',
+            'confidence': 0.73,
+            'injury_report': 'Both teams healthy'
+        },
+        {
+            'home_team': 'CLE',
+            'away_team': 'GB',
+            'predicted_winner': 'GB',
+            'confidence': 0.69,
+            'injury_report': 'Both teams healthy'
+        },
+        {
+            'home_team': 'LAC',
+            'away_team': 'DEN',
+            'predicted_winner': 'LAC',
+            'confidence': 0.66,
+            'injury_report': 'Both teams healthy'
+        },
+        {
+            'home_team': 'SEA',
+            'away_team': 'NO',
+            'predicted_winner': 'SEA',
+            'confidence': 0.64,
+            'injury_report': 'Both teams healthy'
+        },
+        {
+            'home_team': 'SF',
+            'away_team': 'ARI',
+            'predicted_winner': 'SF',
+            'confidence': 0.71,
+            'injury_report': 'Both teams healthy'
+        },
+        {
+            'home_team': 'CHI',
+            'away_team': 'DAL',
+            'predicted_winner': 'DAL',
+            'confidence': 0.68,
+            'injury_report': 'Both teams healthy'
+        },
+        {
+            'home_team': 'NYG',
+            'away_team': 'KC',
+            'predicted_winner': 'KC',
+            'confidence': 0.72,
+            'injury_report': 'Both teams healthy'
+        },
+        # Monday Night Game
+        {
+            'home_team': 'BAL',
             'away_team': 'DET',
-            'predicted_winner': 'DET',
+            'predicted_winner': 'BAL',
             'confidence': 0.74,
             'injury_report': 'Both teams healthy'
         }
