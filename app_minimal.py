@@ -85,22 +85,31 @@ def init_db():
 def index():
     """Home page - show current week predictions"""
     try:
+        # Initialize database first
+        init_db()
+        
         conn = get_db_connection()
         if not conn:
             flash('Database connection error. Please try again later.', 'error')
             return render_template('index.html', message="Database unavailable")
         
-        # Get the latest week with predictions
-        latest_week = conn.execute(
-            'SELECT MAX(week) as max_week FROM predictions WHERE season = 2025'
-        ).fetchone()
-        
-        conn.close()
-        
-        if latest_week['max_week']:
-            return redirect(url_for('week_predictions', week=latest_week['max_week']))
-        else:
-            return render_template('index.html', message="No predictions available yet")
+        # Check if predictions table exists
+        try:
+            latest_week = conn.execute(
+                'SELECT MAX(week) as max_week FROM predictions WHERE season = 2025'
+            ).fetchone()
+            
+            conn.close()
+            
+            if latest_week and latest_week['max_week']:
+                return redirect(url_for('week_predictions', week=latest_week['max_week']))
+            else:
+                return render_template('index.html', message="No predictions available yet. Generate some predictions to get started!")
+        except sqlite3.OperationalError as e:
+            logger.error(f"Database table error: {e}")
+            conn.close()
+            return render_template('index.html', message="Database not initialized. Please visit /init-db first.")
+            
     except Exception as e:
         logger.error(f"Index page error: {e}")
         flash('An error occurred. Please try again.', 'error')
@@ -130,16 +139,26 @@ def init_database():
 def week_predictions(week):
     """Display predictions for a specific week"""
     try:
+        # Initialize database first
+        init_db()
+        
         conn = get_db_connection()
         if not conn:
             flash('Database connection error. Please try again later.', 'error')
             return redirect(url_for('index'))
         
-        # Get predictions for the week
-        predictions = conn.execute(
-            'SELECT * FROM predictions WHERE week = ? AND season = 2025 ORDER BY home_team',
-            (week,)
-        ).fetchall()
+        # Check if tables exist
+        try:
+            # Get predictions for the week
+            predictions = conn.execute(
+                'SELECT * FROM predictions WHERE week = ? AND season = 2025 ORDER BY home_team',
+                (week,)
+            ).fetchall()
+        except sqlite3.OperationalError as e:
+            logger.error(f"Week predictions database error: {e}")
+            conn.close()
+            flash('Database not initialized. Please visit /init-db first.', 'error')
+            return redirect(url_for('index'))
         
         # Get results for the week
         results = conn.execute(
@@ -234,20 +253,30 @@ def generate_predictions(week):
 def stats():
     """Display model statistics"""
     try:
+        # Initialize database first
+        init_db()
+        
         conn = get_db_connection()
         if not conn:
             flash('Database connection error. Please try again later.', 'error')
             return redirect(url_for('index'))
         
-        # Get all predictions with results
-        stats_data = conn.execute('''
-            SELECT p.*, r.home_score, r.away_score, r.actual_winner
-            FROM predictions p
-            LEFT JOIN results r ON p.week = r.week AND p.season = r.season 
-                AND p.home_team = r.home_team AND p.away_team = r.away_team
-            WHERE p.season = 2025
-            ORDER BY p.week, p.home_team
-        ''').fetchall()
+        # Check if tables exist
+        try:
+            # Get all predictions with results
+            stats_data = conn.execute('''
+                SELECT p.*, r.home_score, r.away_score, r.actual_winner
+                FROM predictions p
+                LEFT JOIN results r ON p.week = r.week AND p.season = r.season 
+                    AND p.home_team = r.home_team AND p.away_team = r.away_team
+                WHERE p.season = 2025
+                ORDER BY p.week, p.home_team
+            ''').fetchall()
+        except sqlite3.OperationalError as e:
+            logger.error(f"Stats database error: {e}")
+            conn.close()
+            flash('Database not initialized. Please visit /init-db first.', 'error')
+            return redirect(url_for('index'))
         
         # Calculate statistics - only count games that have been completed
         completed_games = [row for row in stats_data if row['actual_winner']]
