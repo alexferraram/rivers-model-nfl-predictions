@@ -159,8 +159,8 @@ def fetch_nfl_scores_from_espn(week, season=2025):
         return []
 
 def get_2025_week3_predictions():
-    """Get CORRECT 2025 Week 3 NFL predictions using the actual RIVERS model"""
-    logger.info("🌊 Running RIVERS Model for 2025 Week 3 predictions")
+    """Get CORRECT 2025 Week 3 NFL predictions using ONLY the full RIVERS model"""
+    logger.info("🌊 Running FULL RIVERS Model for 2025 Week 3 predictions")
     
     try:
         # Try to import the full RIVERS model first
@@ -190,37 +190,13 @@ def get_2025_week3_predictions():
         return formatted_predictions
         
     except ImportError as e:
-        logger.warning(f"Full RIVERS model unavailable: {e}")
-        logger.info("Trying Simple RIVERS Model...")
-        try:
-            from simple_rivers_model import SimpleRiversModel
-            
-            model = SimpleRiversModel()
-            predictions = model.generate_week3_predictions()
-            
-            logger.info(f"✅ Simple RIVERS Model generated {len(predictions)} predictions")
-            return predictions
-            
-        except ImportError as e2:
-            logger.error(f"Simple RIVERS model also unavailable: {e2}")
-            logger.info("Falling back to basic predictions...")
-            return get_fallback_predictions()
+        logger.error(f"❌ FULL RIVERS MODEL UNAVAILABLE: {e}")
+        logger.error("❌ Cannot generate predictions without the full RIVERS model")
+        raise Exception("Full RIVERS model required but unavailable")
     except Exception as e:
-        logger.error(f"RIVERS Model error: {e}")
-        logger.info("Falling back to Simple RIVERS Model...")
-        try:
-            from simple_rivers_model import SimpleRiversModel
-            
-            model = SimpleRiversModel()
-            predictions = model.generate_week3_predictions()
-            
-            logger.info(f"✅ Simple RIVERS Model generated {len(predictions)} predictions")
-            return predictions
-            
-        except Exception as e2:
-            logger.error(f"Simple RIVERS Model error: {e2}")
-            logger.info("Falling back to basic predictions...")
-            return get_fallback_predictions()
+        logger.error(f"❌ RIVERS MODEL ERROR: {e}")
+        logger.error("❌ Cannot generate predictions due to model error")
+        raise Exception(f"RIVERS model failed: {e}")
 
 def get_fallback_predictions():
     """Fallback predictions if RIVERS model fails"""
@@ -355,7 +331,12 @@ def week_predictions(week):
                 logger.info(f"Cleared old predictions for Week {week}")
                 
                 # Get FRESH 2025 Week 3 predictions
-                predictions = get_2025_week3_predictions()
+                try:
+                    predictions = get_2025_week3_predictions()
+                except Exception as model_error:
+                    logger.error(f"RIVERS Model failed: {model_error}")
+                    flash(f"❌ RIVERS Model Error: {model_error}", 'error')
+                    return redirect(url_for('week_predictions', week=week))
                 
                 # Save fresh predictions to database
                 for pred in predictions:
@@ -396,21 +377,39 @@ def week_predictions(week):
                     conn.close()
         
         # Fallback to fresh predictions
-        predictions = get_2025_week3_predictions()
-        return render_template('week_predictions.html', 
-                             predictions=predictions, 
-                             results={},
-                             current_week=week,
-                             available_weeks=[3])
+        try:
+            predictions = get_2025_week3_predictions()
+            return render_template('week_predictions.html', 
+                                 predictions=predictions, 
+                                 results={},
+                                 current_week=week,
+                                 available_weeks=[3])
+        except Exception as model_error:
+            logger.error(f"RIVERS Model failed in fallback: {model_error}")
+            flash(f"❌ RIVERS Model Error: {model_error}", 'error')
+            return render_template('week_predictions.html', 
+                                 predictions=[], 
+                                 results={},
+                                 current_week=week,
+                                 available_weeks=[3])
         
     except Exception as e:
         logger.error(f"Week predictions error: {e}")
-        predictions = get_2025_week3_predictions()
-        return render_template('week_predictions.html', 
-                             predictions=predictions, 
-                             results={},
-                             current_week=week,
-                             available_weeks=[3])
+        try:
+            predictions = get_2025_week3_predictions()
+            return render_template('week_predictions.html', 
+                                 predictions=predictions, 
+                                 results={},
+                                 current_week=week,
+                                 available_weeks=[3])
+        except Exception as model_error:
+            logger.error(f"RIVERS Model failed in final fallback: {model_error}")
+            flash(f"❌ RIVERS Model Error: {model_error}", 'error')
+            return render_template('week_predictions.html', 
+                                 predictions=[], 
+                                 results={},
+                                 current_week=week,
+                                 available_weeks=[3])
 
 @app.route('/update_scores/<int:week>')
 def update_scores(week):
