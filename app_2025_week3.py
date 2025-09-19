@@ -163,11 +163,11 @@ def get_2025_week3_predictions():
     logger.info("🌊 Running RIVERS Model for 2025 Week 3 predictions")
     
     try:
-        # Import the RIVERS model
+        # Try to import the full RIVERS model first
         from rivers_model_validated import RiversModelValidated
         
         # Initialize the model
-        logger.info("Initializing RIVERS Model...")
+        logger.info("Initializing Full RIVERS Model...")
         model = RiversModelValidated()
         
         # Generate Week 3 predictions
@@ -186,17 +186,41 @@ def get_2025_week3_predictions():
             }
             formatted_predictions.append(formatted_prediction)
         
-        logger.info(f"✅ RIVERS Model generated {len(formatted_predictions)} predictions")
+        logger.info(f"✅ Full RIVERS Model generated {len(formatted_predictions)} predictions")
         return formatted_predictions
         
     except ImportError as e:
-        logger.error(f"Failed to import RIVERS model: {e}")
-        logger.info("Falling back to basic predictions...")
-        return get_fallback_predictions()
+        logger.warning(f"Full RIVERS model unavailable: {e}")
+        logger.info("Trying Simple RIVERS Model...")
+        try:
+            from simple_rivers_model import SimpleRiversModel
+            
+            model = SimpleRiversModel()
+            predictions = model.generate_week3_predictions()
+            
+            logger.info(f"✅ Simple RIVERS Model generated {len(predictions)} predictions")
+            return predictions
+            
+        except ImportError as e2:
+            logger.error(f"Simple RIVERS model also unavailable: {e2}")
+            logger.info("Falling back to basic predictions...")
+            return get_fallback_predictions()
     except Exception as e:
         logger.error(f"RIVERS Model error: {e}")
-        logger.info("Falling back to basic predictions...")
-        return get_fallback_predictions()
+        logger.info("Falling back to Simple RIVERS Model...")
+        try:
+            from simple_rivers_model import SimpleRiversModel
+            
+            model = SimpleRiversModel()
+            predictions = model.generate_week3_predictions()
+            
+            logger.info(f"✅ Simple RIVERS Model generated {len(predictions)} predictions")
+            return predictions
+            
+        except Exception as e2:
+            logger.error(f"Simple RIVERS Model error: {e2}")
+            logger.info("Falling back to basic predictions...")
+            return get_fallback_predictions()
 
 def get_fallback_predictions():
     """Fallback predictions if RIVERS model fails"""
