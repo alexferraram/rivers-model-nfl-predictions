@@ -9,6 +9,9 @@ import json
 import os
 from datetime import datetime
 import logging
+import requests
+from bs4 import BeautifulSoup
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -80,6 +83,86 @@ def init_db():
     except Exception as e:
         logger.error(f"Database initialization error: {e}")
         return False
+
+def fetch_nfl_scores_from_espn(week, season=2025):
+    """Fetch actual NFL scores from ESPN - only returns completed games"""
+    try:
+        logger.info(f"Fetching NFL scores from ESPN for Week {week}, Season {season}")
+        
+        # ESPN NFL scores URL
+        url = f"https://www.espn.com/nfl/scoreboard/_/week/{week}/year/{season}/seasontype/2"
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        games = []
+        
+        # Look for game containers
+        game_containers = soup.find_all('div', class_='ScoreCell')
+        
+        if not game_containers:
+            # Try alternative selectors
+            game_containers = soup.find_all('div', {'data-testid': 'scoreboard-game'})
+        
+        if not game_containers:
+            # Try looking for game cards
+            game_containers = soup.find_all('div', class_='GameCard')
+        
+        logger.info(f"Found {len(game_containers)} potential game containers")
+        
+        for container in game_containers:
+            try:
+                # Extract team names
+                team_elements = container.find_all('div', class_='ScoreCell__TeamName')
+                if len(team_elements) >= 2:
+                    away_team = team_elements[0].get_text(strip=True)
+                    home_team = team_elements[1].get_text(strip=True)
+                    
+                    # Extract scores
+                    score_elements = container.find_all('div', class_='ScoreCell__Score')
+                    if len(score_elements) >= 2:
+                        away_score = score_elements[0].get_text(strip=True)
+                        home_score = score_elements[1].get_text(strip=True)
+                        
+                        # Only include games with actual scores (not "TBD" or empty)
+                        if away_score.isdigit() and home_score.isdigit():
+                            # Determine winner
+                            if int(away_score) > int(home_score):
+                                winner = away_team
+                            elif int(home_score) > int(away_score):
+                                winner = home_team
+                            else:
+                                winner = "TIE"
+                            
+                            games.append({
+                                'away_team': away_team,
+                                'home_team': home_team,
+                                'away_score': int(away_score),
+                                'home_score': int(home_score),
+                                'winner': winner
+                            })
+                            
+                            logger.info(f"Found completed game: {away_team} {away_score} @ {home_team} {home_score}")
+                
+            except Exception as e:
+                logger.warning(f"Error parsing game container: {e}")
+                continue
+        
+        logger.info(f"Successfully fetched {len(games)} completed games from ESPN")
+        return games
+        
+    except requests.RequestException as e:
+        logger.error(f"Error fetching from ESPN: {e}")
+        return []
+    except Exception as e:
+        logger.error(f"Unexpected error fetching scores: {e}")
+        return []
 
 def get_2025_week3_predictions():
     """Get CORRECT 2025 Week 3 NFL predictions - OFFICIAL SCHEDULE"""
@@ -275,60 +358,76 @@ def week_predictions(week):
 
 @app.route('/update_scores/<int:week>')
 def update_scores(week):
-    """Auto update scores for a specific week"""
+    """Auto update scores for a specific week - fetches REAL data from ESPN"""
     try:
+        logger.info(f"Updating scores for Week {week} from ESPN")
+        
+        # Fetch actual scores from ESPN
+        espn_games = fetch_nfl_scores_from_espn(week, 2025)
+        
+        if not espn_games:
+            flash('No completed games found for this week. Games may not have finished yet.', 'info')
+            return redirect(url_for('week_predictions', week=week))
+        
         conn = get_db_connection()
-        if conn:
-            # Add sample results for OFFICIAL 2025 Week 3 games
-            sample_results = [
-                ('BUF', 'MIA', 31, 21, 'BUF'),
-                ('TEN', 'IND', 24, 21, 'IND'),
-                ('NE', 'PIT', 27, 24, 'PIT'),
-                ('TB', 'NYJ', 23, 20, 'TB'),
-                ('WAS', 'LV', 28, 25, 'LV'),
-                ('PHI', 'LA', 35, 28, 'PHI'),
-                ('CAR', 'ATL', 21, 18, 'ATL'),
-                ('MIN', 'CIN', 24, 21, 'CIN'),
-                ('JAX', 'HOU', 20, 17, 'JAX'),
-                ('CLE', 'GB', 26, 23, 'GB'),
-                ('LAC', 'DEN', 25, 22, 'LAC'),
-                ('SEA', 'NO', 24, 21, 'SEA'),
-                ('SF', 'ARI', 23, 20, 'SF'),
-                ('CHI', 'DAL', 24, 21, 'DAL'),
-                ('NYG', 'KC', 19, 16, 'KC')
-            ]
-            
-            added_count = 0
-            for home_team, away_team, home_score, away_score, actual_winner in sample_results:
+        if not conn:
+            flash('Database connection error.', 'error')
+            return redirect(url_for('week_predictions', week=week))
+        
+        added_count = 0
+        updated_count = 0
+        
+        for game in espn_games:
+            try:
                 # Check if result already exists
                 existing = conn.execute(
                     'SELECT * FROM results WHERE week = ? AND season = 2025 AND home_team = ? AND away_team = ?',
-                    (week, home_team, away_team)
+                    (week, game['home_team'], game['away_team'])
                 ).fetchone()
                 
                 if not existing:
-                    # Add result
+                    # Add new result
                     conn.execute('''
                         INSERT INTO results (week, season, home_team, away_team, home_score, away_score, actual_winner)
                         VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ''', (week, 2025, home_team, away_team, home_score, away_score, actual_winner))
+                    ''', (week, 2025, game['home_team'], game['away_team'], 
+                          game['home_score'], game['away_score'], game['winner']))
                     added_count += 1
-            
-            if added_count > 0:
-                conn.commit()
-                flash(f'Updated {added_count} game results for Week {week}!', 'success')
-            else:
-                flash(f'All scores for Week {week} are already up to date.', 'info')
-            
-            conn.close()
+                    logger.info(f"Added result: {game['away_team']} {game['away_score']} @ {game['home_team']} {game['home_score']}")
+                else:
+                    # Update existing result if scores changed
+                    if (existing['home_score'] != game['home_score'] or 
+                        existing['away_score'] != game['away_score'] or 
+                        existing['actual_winner'] != game['winner']):
+                        
+                        conn.execute('''
+                            UPDATE results 
+                            SET home_score = ?, away_score = ?, actual_winner = ?
+                            WHERE week = ? AND season = 2025 AND home_team = ? AND away_team = ?
+                        ''', (game['home_score'], game['away_score'], game['winner'],
+                              week, game['home_team'], game['away_team']))
+                        updated_count += 1
+                        logger.info(f"Updated result: {game['away_team']} {game['away_score']} @ {game['home_team']} {game['home_score']}")
+                
+            except Exception as e:
+                logger.error(f"Error processing game {game}: {e}")
+                continue
+        
+        conn.commit()
+        conn.close()
+        
+        if added_count > 0:
+            flash(f'Added {added_count} new game results for Week {week}!', 'success')
+        elif updated_count > 0:
+            flash(f'Updated {updated_count} game results for Week {week}!', 'success')
         else:
-            flash('Database connection error.', 'error')
+            flash(f'All scores for Week {week} are already up to date.', 'info')
         
         return redirect(url_for('week_predictions', week=week))
         
     except Exception as e:
         logger.error(f"Update scores error: {e}")
-        flash('Error updating scores. Please try again.', 'error')
+        flash('Error updating scores from ESPN. Please try again.', 'error')
         return redirect(url_for('week_predictions', week=week))
 
 @app.route('/stats')
