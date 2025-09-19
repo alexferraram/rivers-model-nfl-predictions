@@ -102,9 +102,11 @@ def index():
             conn.close()
             
             if latest_week and latest_week['max_week']:
+                # Only redirect if we have predictions, otherwise show home page
                 return redirect(url_for('week_predictions', week=latest_week['max_week']))
             else:
-                return render_template('index.html', message="No predictions available yet. Generate some predictions to get started!")
+                # Show home page with generate predictions form
+                return render_template('index.html', message="Welcome to The RIVERS Model - AI NFL Predictions")
         except sqlite3.OperationalError as e:
             logger.error(f"Database table error: {e}")
             conn.close()
@@ -197,6 +199,9 @@ def week_predictions(week):
 def generate_predictions(week):
     """Generate predictions for a specific week"""
     try:
+        # Initialize database first
+        init_db()
+        
         # Sample predictions for Week 3
         sample_predictions = [
             {
@@ -225,7 +230,7 @@ def generate_predictions(week):
         conn = get_db_connection()
         if not conn:
             flash('Database connection error. Please try again later.', 'error')
-            return redirect(url_for('index'))
+            return render_template('index.html', message="Database unavailable")
         
         # Clear existing predictions for this week
         conn.execute('DELETE FROM predictions WHERE week = ? AND season = 2025', (week,))
@@ -247,7 +252,7 @@ def generate_predictions(week):
     except Exception as e:
         logger.error(f"Generate predictions error: {e}")
         flash('Error generating predictions. Please try again.', 'error')
-        return redirect(url_for('index'))
+        return render_template('index.html', message="Error generating predictions")
 
 @app.route('/stats')
 def stats():
