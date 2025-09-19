@@ -258,10 +258,11 @@ def index():
                 
                 conn.close()
                 
-                return render_template('home_complete.html', 
+                return render_template('week_predictions.html', 
                                      predictions=predictions, 
                                      results=results,
-                                     current_week=3)
+                                     current_week=3,
+                                     available_weeks=[3])
                 
             except Exception as e:
                 logger.error(f"Database error: {e}")
@@ -270,17 +271,109 @@ def index():
         
         # Fallback to hardcoded predictions
         predictions = get_week3_predictions()
-        return render_template('home_complete.html', 
+        return render_template('week_predictions.html', 
                              predictions=predictions, 
                              results={},
-                             current_week=3)
+                             current_week=3,
+                             available_weeks=[3])
         
     except Exception as e:
         logger.error(f"Index page error: {e}")
-        return render_template('home_complete.html', 
+        return render_template('week_predictions.html', 
                              predictions=get_week3_predictions(), 
                              results={},
-                             current_week=3)
+                             current_week=3,
+                             available_weeks=[3])
+
+@app.route('/week/<int:week>')
+def week_predictions(week):
+    """Display predictions for a specific week - matches local version"""
+    try:
+        # Initialize database
+        init_db()
+        
+        # Ensure Week 3 predictions are saved to database
+        conn = get_db_connection()
+        if conn:
+            try:
+                # Check if predictions already exist
+                existing = conn.execute(
+                    'SELECT COUNT(*) FROM predictions WHERE week = ? AND season = 2025',
+                    (week,)
+                ).fetchone()
+                
+                if existing[0] == 0:
+                    # Save Week 3 predictions to database
+                    predictions = get_week3_predictions()
+                    for pred in predictions:
+                        conn.execute('''
+                            INSERT INTO predictions (week, season, home_team, away_team, predicted_winner, confidence, injury_report)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                        ''', (week, 2025, pred['home_team'], pred['away_team'], 
+                              pred['predicted_winner'], pred['confidence'], pred['injury_report']))
+                    conn.commit()
+                    logger.info(f"Saved Week {week} predictions to database")
+                
+                # Get predictions from database
+                predictions_data = conn.execute(
+                    'SELECT * FROM predictions WHERE week = ? AND season = 2025 ORDER BY home_team',
+                    (week,)
+                ).fetchall()
+                
+                # Convert to list format
+                predictions = []
+                for row in predictions_data:
+                    predictions.append({
+                        'home_team': row['home_team'],
+                        'away_team': row['away_team'],
+                        'predicted_winner': row['predicted_winner'],
+                        'confidence': row['confidence'],
+                        'injury_report': row['injury_report']
+                    })
+                
+                # Get any results for this week
+                results_data = conn.execute(
+                    'SELECT * FROM results WHERE week = ? AND season = 2025',
+                    (week,)
+                ).fetchall()
+                
+                results = {}
+                for result in results_data:
+                    game_key = f"{result['away_team']}@{result['home_team']}"
+                    results[game_key] = {
+                        'home_score': result['home_score'],
+                        'away_score': result['away_score'],
+                        'actual_winner': result['actual_winner']
+                    }
+                
+                conn.close()
+                
+                return render_template('week_predictions.html', 
+                                     predictions=predictions, 
+                                     results=results,
+                                     current_week=week,
+                                     available_weeks=[3])
+                
+            except Exception as e:
+                logger.error(f"Database error: {e}")
+                if conn:
+                    conn.close()
+        
+        # Fallback to hardcoded predictions
+        predictions = get_week3_predictions()
+        return render_template('week_predictions.html', 
+                             predictions=predictions, 
+                             results={},
+                             current_week=week,
+                             available_weeks=[3])
+        
+    except Exception as e:
+        logger.error(f"Week predictions error: {e}")
+        return render_template('week_predictions.html', 
+                             predictions=get_week3_predictions(), 
+                             results={},
+                             current_week=week,
+                             available_weeks=[3])
 
 @app.route('/update_scores/<int:week>')
 def update_scores(week):
