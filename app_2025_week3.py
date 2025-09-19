@@ -164,15 +164,31 @@ def get_2025_week3_predictions():
     
     try:
         # Try to import the full RIVERS model first
+        logger.info("Attempting to import RIVERS model dependencies...")
+        
+        # Check for required dependencies first
+        try:
+            import pandas as pd
+            import numpy as np
+            logger.info("✅ pandas and numpy available")
+        except ImportError as deps_error:
+            logger.error(f"❌ Missing core dependencies: {deps_error}")
+            logger.error("❌ RIVERS model requires pandas and numpy")
+            raise Exception(f"Missing dependencies: {deps_error}")
+        
+        # Try to import the RIVERS model
         from rivers_model_validated import RiversModelValidated
+        logger.info("✅ RIVERS model imported successfully")
         
         # Initialize the model
         logger.info("Initializing Full RIVERS Model...")
         model = RiversModelValidated()
+        logger.info("✅ RIVERS model initialized successfully")
         
         # Generate Week 3 predictions
-        logger.info("Generating Week 3 predictions...")
+        logger.info("Generating Week 3 predictions with REAL confidence levels...")
         predictions = model.generate_week3_predictions()
+        logger.info(f"✅ RIVERS model generated {len(predictions)} predictions")
         
         # Convert to the format expected by the website
         formatted_predictions = []
@@ -186,7 +202,7 @@ def get_2025_week3_predictions():
             }
             formatted_predictions.append(formatted_prediction)
         
-        logger.info(f"✅ Full RIVERS Model generated {len(formatted_predictions)} predictions")
+        logger.info(f"✅ Full RIVERS Model generated {len(formatted_predictions)} predictions with REAL confidence levels")
         return formatted_predictions
         
     except ImportError as e:
