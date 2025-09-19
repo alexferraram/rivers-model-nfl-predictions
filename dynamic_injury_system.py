@@ -398,9 +398,9 @@ class DynamicInjurySystem:
             logger.info("Scraping NFL.com injury data...")
             
             # Import the NFL scraper
-            from comprehensive_nfl_scraper import ComprehensiveNFLInjuryScraper
+            from simple_nfl_scraper import SimpleNFLInjuryScraper
             
-            scraper = ComprehensiveNFLInjuryScraper()
+            scraper = SimpleNFLInjuryScraper()
             real_injury_data = scraper.scrape_all_injuries()
             
             if real_injury_data and len(real_injury_data) == 32:
