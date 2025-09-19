@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Predictions - Week {{ week }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">📤 Upload Week {{ week }} Predictions</h3>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Upload your RIVERS model predictions for Week {{ week }}.</p>
+                    
+                    <form method="POST">
+                        <div class="form-group mb-3">
+                            <label for="predictions_json" class="form-label">
+                                <strong>Predictions JSON:</strong>
+                            </label>
+                            <textarea 
+                                class="form-control" 
+                                id="predictions_json" 
+                                name="predictions_json" 
+                                rows="15" 
+                                placeholder='[
+  {
+    "home_team": "BUF",
+    "away_team": "MIA", 
+    "predicted_winner": "BUF",
+    "confidence": 0.75,
+    "injury_report": "BUF: Matt Milano (LB) - OUT"
+  },
+  {
+    "home_team": "TEN",
+    "away_team": "IND",
+    "predicted_winner": "IND", 
+    "confidence": 0.68,
+    "injury_report": "Both teams healthy"
+  }
+]'
+                                required></textarea>
+                            <div class="form-text">
+                                Paste the JSON output from your RIVERS model here.
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                📤 Upload Predictions
+                            </button>
+                            <a href="{{ url_for('week_predictions', week=week) }}" class="btn btn-outline-secondary">
+                                👀 View Current Predictions
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">📋 Format Requirements</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Required fields for each prediction:</strong></p>
+                    <ul>
+                        <li><code>home_team</code> - Home team abbreviation (e.g., "BUF")</li>
+                        <li><code>away_team</code> - Away team abbreviation (e.g., "MIA")</li>
+                        <li><code>predicted_winner</code> - Predicted winner abbreviation</li>
+                        <li><code>confidence</code> - Confidence level (0.0 to 1.0)</li>
+                        <li><code>injury_report</code> - Injury information (optional)</li>
+                    </ul>
+                    
+                    <div class="alert alert-warning">
+                        <strong>Note:</strong> This will replace any existing predictions for Week {{ week }}.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
