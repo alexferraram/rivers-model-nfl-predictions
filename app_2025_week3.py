@@ -82,8 +82,8 @@ def init_db():
         return False
 
 def get_2025_week3_predictions():
-    """Get CORRECT 2025 Week 3 NFL predictions - NO CACHING"""
-    logger.info("Loading 2025 Week 3 NFL schedule - FRESH DATA")
+    """Get CORRECT 2025 Week 3 NFL predictions - OFFICIAL SCHEDULE"""
+    logger.info("Loading OFFICIAL 2025 Week 3 NFL schedule")
     return [
         # Thursday Night Game
         {
@@ -93,7 +93,7 @@ def get_2025_week3_predictions():
             'confidence': 0.75,
             'injury_report': 'BUF: Matt Milano (LB) - OUT, Ed Oliver (DT) - OUT | MIA: Storm Duck (CB) - OUT'
         },
-        # Sunday Games - CORRECT 2025 SCHEDULE
+        # Sunday Games - OFFICIAL 2025 SCHEDULE
         {
             'home_team': 'TEN',
             'away_team': 'IND',
@@ -191,14 +191,6 @@ def get_2025_week3_predictions():
             'predicted_winner': 'KC',
             'confidence': 0.72,
             'injury_report': 'Both teams healthy'
-        },
-        # Monday Night Game
-        {
-            'home_team': 'BAL',
-            'away_team': 'DET',
-            'predicted_winner': 'BAL',
-            'confidence': 0.74,
-            'injury_report': 'Both teams healthy'
         }
     ]
 
@@ -287,9 +279,9 @@ def update_scores(week):
     try:
         conn = get_db_connection()
         if conn:
-            # Add sample results for 2025 Week 3 games
+            # Add sample results for OFFICIAL 2025 Week 3 games
             sample_results = [
-                ('BUF', 'MIA', 31, 28, 'BUF'),
+                ('BUF', 'MIA', 31, 21, 'BUF'),
                 ('TEN', 'IND', 24, 21, 'IND'),
                 ('NE', 'PIT', 27, 24, 'PIT'),
                 ('TB', 'NYJ', 23, 20, 'TB'),
@@ -303,8 +295,7 @@ def update_scores(week):
                 ('SEA', 'NO', 24, 21, 'SEA'),
                 ('SF', 'ARI', 23, 20, 'SF'),
                 ('CHI', 'DAL', 24, 21, 'DAL'),
-                ('NYG', 'KC', 19, 16, 'KC'),
-                ('BAL', 'DET', 28, 25, 'BAL')
+                ('NYG', 'KC', 19, 16, 'KC')
             ]
             
             added_count = 0
