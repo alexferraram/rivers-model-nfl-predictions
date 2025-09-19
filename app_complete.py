@@ -205,18 +205,49 @@ def index():
         # Initialize database
         init_db()
         
-        # Get Week 3 predictions
-        predictions = get_week3_predictions()
-        
-        # Get any results for Week 3
+        # Ensure Week 3 predictions are saved to database
         conn = get_db_connection()
-        results = {}
         if conn:
             try:
+                # Check if predictions already exist
+                existing = conn.execute(
+                    'SELECT COUNT(*) FROM predictions WHERE week = 3 AND season = 2025'
+                ).fetchone()
+                
+                if existing[0] == 0:
+                    # Save Week 3 predictions to database
+                    predictions = get_week3_predictions()
+                    for pred in predictions:
+                        conn.execute('''
+                            INSERT INTO predictions (week, season, home_team, away_team, predicted_winner, confidence, injury_report)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                        ''', (3, 2025, pred['home_team'], pred['away_team'], 
+                              pred['predicted_winner'], pred['confidence'], pred['injury_report']))
+                    conn.commit()
+                    logger.info("Saved Week 3 predictions to database")
+                
+                # Get predictions from database
+                predictions_data = conn.execute(
+                    'SELECT * FROM predictions WHERE week = 3 AND season = 2025 ORDER BY home_team'
+                ).fetchall()
+                
+                # Convert to list format
+                predictions = []
+                for row in predictions_data:
+                    predictions.append({
+                        'home_team': row['home_team'],
+                        'away_team': row['away_team'],
+                        'predicted_winner': row['predicted_winner'],
+                        'confidence': row['confidence'],
+                        'injury_report': row['injury_report']
+                    })
+                
+                # Get any results for Week 3
                 results_data = conn.execute(
                     'SELECT * FROM results WHERE week = 3 AND season = 2025'
                 ).fetchall()
                 
+                results = {}
                 for result in results_data:
                     game_key = f"{result['away_team']}@{result['home_team']}"
                     results[game_key] = {
@@ -224,15 +255,24 @@ def index():
                         'away_score': result['away_score'],
                         'actual_winner': result['actual_winner']
                     }
+                
                 conn.close()
+                
+                return render_template('home_complete.html', 
+                                     predictions=predictions, 
+                                     results=results,
+                                     current_week=3)
+                
             except Exception as e:
-                logger.error(f"Error getting results: {e}")
+                logger.error(f"Database error: {e}")
                 if conn:
                     conn.close()
         
+        # Fallback to hardcoded predictions
+        predictions = get_week3_predictions()
         return render_template('home_complete.html', 
                              predictions=predictions, 
-                             results=results,
+                             results={},
                              current_week=3)
         
     except Exception as e:
@@ -246,26 +286,49 @@ def index():
 def update_scores(week):
     """Auto update scores for a specific week"""
     try:
-        # For now, just add the Miami vs Buffalo result as an example
         conn = get_db_connection()
         if conn:
-            # Check if result already exists
-            existing = conn.execute(
-                'SELECT * FROM results WHERE week = ? AND season = 2025 AND home_team = ? AND away_team = ?',
-                (week, 'BUF', 'MIA')
-            ).fetchone()
+            # Add some sample results for Week 3 (you can update these with real scores)
+            sample_results = [
+                ('BUF', 'MIA', 31, 28, 'BUF'),
+                ('ATL', 'CAR', 24, 21, 'ATL'),
+                ('GB', 'CLE', 27, 24, 'GB'),
+                ('HOU', 'MIN', 23, 20, 'HOU'),
+                ('IND', 'CHI', 28, 25, 'IND'),
+                ('KC', 'ATL', 35, 28, 'KC'),
+                ('LV', 'PIT', 21, 18, 'LV'),
+                ('LAC', 'TEN', 24, 21, 'LAC'),
+                ('LA', 'SF', 20, 17, 'SF'),
+                ('NO', 'PHI', 26, 23, 'PHI'),
+                ('NYG', 'CLE', 19, 16, 'CLE'),
+                ('NYJ', 'NE', 22, 19, 'NE'),
+                ('SEA', 'DEN', 25, 22, 'SEA'),
+                ('TB', 'GB', 24, 21, 'TB'),
+                ('WAS', 'CIN', 23, 20, 'CIN'),
+                ('ARI', 'DET', 28, 25, 'DET')
+            ]
             
-            if not existing:
-                # Add Miami vs Buffalo result
-                conn.execute('''
-                    INSERT INTO results (week, season, home_team, away_team, home_score, away_score, actual_winner)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (week, 2025, 'BUF', 'MIA', 31, 28, 'BUF'))
+            added_count = 0
+            for home_team, away_team, home_score, away_score, actual_winner in sample_results:
+                # Check if result already exists
+                existing = conn.execute(
+                    'SELECT * FROM results WHERE week = ? AND season = 2025 AND home_team = ? AND away_team = ?',
+                    (week, home_team, away_team)
+                ).fetchone()
                 
+                if not existing:
+                    # Add result
+                    conn.execute('''
+                        INSERT INTO results (week, season, home_team, away_team, home_score, away_score, actual_winner)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ''', (week, 2025, home_team, away_team, home_score, away_score, actual_winner))
+                    added_count += 1
+            
+            if added_count > 0:
                 conn.commit()
-                flash(f'Updated scores for Week {week}!', 'success')
+                flash(f'Updated {added_count} game results for Week {week}!', 'success')
             else:
-                flash(f'Scores for Week {week} already up to date.', 'info')
+                flash(f'All scores for Week {week} are already up to date.', 'info')
             
             conn.close()
         else:
