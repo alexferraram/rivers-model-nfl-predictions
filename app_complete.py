@@ -1,5 +1,5 @@
 """
-NFL Predictions Website - Complete Version
+NFL Predictions Website - Complete Version (2025 Season)
 All features working: predictions on home page, auto update scores, working statistics
 """
 
