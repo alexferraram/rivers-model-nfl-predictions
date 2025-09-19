@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}The RIVERS Model - AI NFL Predictions{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">
+                    <i class="fas fa-football-ball me-2"></i>
+                    The RIVERS Model - AI NFL Predictions
+                </h2>
+            </div>
+            <div class="card-body">
+                {% if message %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>{{ message }}
+                    </div>
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-plus-circle me-2"></i>
+                                    Generate New Predictions
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Generate predictions for a specific week using the RIVERS model. The predictions will be automatically saved to the website.</p>
+        <form method="GET" action="{{ url_for('generate_predictions', week=3) }}">
+            <div class="mb-3">
+                <label for="week" class="form-label">Week</label>
+                <select class="form-select" id="week" name="week">
+                    {% for week_num in range(3, 19) %}
+                        <option value="{{ week_num }}" {% if week_num == 3 %}selected{% endif %}>
+                            Week {{ week_num }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-cogs me-2"></i>Generate Predictions
+            </button>
+        </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-history me-2"></i>
+                                    View Historical Predictions
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Browse predictions from previous weeks and see how the model performed.</p>
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('stats') }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-chart-line me-2"></i>View Statistics
+                                    </a>
+                                    <a href="{{ url_for('week_predictions', week=3) }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-calendar-week me-2"></i>View Week 3 Predictions
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

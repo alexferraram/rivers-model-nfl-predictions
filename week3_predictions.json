@@ -1,0 +1,114 @@
+[
+  {
+    "home_team": "BUF",
+    "away_team": "MIA",
+    "winner": "BUF",
+    "confidence": 0.8067455052377503,
+    "injury_report": "BUF: Matt Milano (LB) - OUT, Ed Oliver (DT) - OUT | MIA: Storm Duck (CB) - OUT, Ifeatu Melifonwu (S) - OUT, Darren Waller (TE) - OUT"
+  },
+  {
+    "home_team": "CAR",
+    "away_team": "ATL",
+    "winner": "ATL",
+    "confidence": 0.7020191491833037,
+    "injury_report": "Both teams healthy"
+  },
+  {
+    "home_team": "CLE",
+    "away_team": "GB",
+    "winner": "GB",
+    "confidence": 0.8177735025251999,
+    "injury_report": "Both teams healthy"
+  },
+  {
+    "home_team": "JAX",
+    "away_team": "HOU",
+    "winner": "JAX",
+    "confidence": 0.6887228885646874,
+    "injury_report": "Both teams healthy"
+  },
+  {
+    "home_team": "MIN",
+    "away_team": "CIN",
+    "winner": "CIN",
+    "confidence": 0.7314003369511628,
+    "injury_report": "Both teams healthy"
+  },
+  {
+    "home_team": "NE",
+    "away_team": "PIT",
+    "winner": "NE",
+    "confidence": 0.5948225635637693,
+    "injury_report": "Both teams healthy"
+  },
+  {
+    "home_team": "PHI",
+    "away_team": "LA",
+    "winner": "PHI",
+    "confidence": 0.549147118941211,
+    "injury_report": "Both teams healthy"
+  },
+  {
+    "home_team": "TB",
+    "away_team": "NYJ",
+    "winner": "TB",
+    "confidence": 0.5305042086823054,
+    "injury_report": "Both teams healthy"
+  },
+  {
+    "home_team": "TEN",
+    "away_team": "IND",
+    "winner": "IND",
+    "confidence": 0.8811618609277788,
+    "injury_report": "Both teams healthy"
+  },
+  {
+    "home_team": "WAS",
+    "away_team": "LV",
+    "winner": "WAS",
+    "confidence": 0.7102010454203416,
+    "injury_report": "Both teams healthy"
+  },
+  {
+    "home_team": "LAC",
+    "away_team": "DEN",
+    "winner": "LAC",
+    "confidence": 0.6814995368045849,
+    "injury_report": "Both teams healthy"
+  },
+  {
+    "home_team": "SEA",
+    "away_team": "NO",
+    "winner": "SEA",
+    "confidence": 0.5230479685430683,
+    "injury_report": "Both teams healthy"
+  },
+  {
+    "home_team": "CHI",
+    "away_team": "DAL",
+    "winner": "DAL",
+    "confidence": 0.7488394672532557,
+    "injury_report": "Both teams healthy"
+  },
+  {
+    "home_team": "SF",
+    "away_team": "ARI",
+    "winner": "ARI",
+    "confidence": 0.5448274588335447,
+    "injury_report": "Both teams healthy"
+  },
+  {
+    "home_team": "NYG",
+    "away_team": "KC",
+    "winner": "KC",
+    "confidence": 0.508398967461379,
+    "injury_report": "Both teams healthy"
+  },
+  {
+    "home_team": "BAL",
+    "away_team": "DET",
+    "winner": "BAL",
+    "confidence": 0.5735364557850757,
+    "injury_report": "Both teams healthy"
+  }
+]
