@@ -448,7 +448,7 @@ if __name__ == '__main__':
     # Get port from environment variable (for deployment platforms)
     port = int(os.environ.get('PORT', 8080))
     
-    print(f"🌊 The RIVERS Model - AI NFL Predictions Starting...")
+    print(f"🌊 The RIVERS Model - AI NFL Predictions Starting... (2025 Season)")
     print(f"📱 Visit: http://localhost:{port}")
     print("🛑 Press Ctrl+C to stop")
     
