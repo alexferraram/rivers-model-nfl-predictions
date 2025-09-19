@@ -140,17 +140,18 @@ def get_live_injury_data():
     try:
         logger.info("🔍 Fetching live injury data from NFL.com...")
         
-        # Import the comprehensive scraper
-        from comprehensive_nfl_scraper import ComprehensiveNFLInjuryScraper
+        # Import the simple scraper that actually works
+        from simple_nfl_scraper import SimpleNFLInjuryScraper
         
-        scraper = ComprehensiveNFLInjuryScraper()
+        scraper = SimpleNFLInjuryScraper()
         injury_data = scraper.scrape_all_injuries()
         
-        if injury_data and len(injury_data) == 32:
-            logger.info(f"✅ Successfully scraped live injury data for all 32 teams")
+        if injury_data:
+            teams_with_data = sum(1 for injuries in injury_data.values() if injuries)
+            logger.info(f"✅ Successfully scraped live injury data for {teams_with_data} teams")
             return injury_data
         else:
-            logger.warning("⚠️ Could not get complete injury data, using fallback")
+            logger.warning("⚠️ Could not get injury data, using fallback")
             return {}
             
     except Exception as e:
@@ -178,8 +179,8 @@ def format_injury_report(team_abbr, injury_data):
     if not injuries:
         return 'Both teams healthy'
     
-    # Filter for significant injuries (OUT, DOUBTFUL)
-    significant_injuries = [inj for inj in injuries if inj['status'] in ['OUT', 'DOUBTFUL']]
+    # Filter for significant injuries (OUT, DOUBTFUL) - check both cases
+    significant_injuries = [inj for inj in injuries if inj['status'].upper() in ['OUT', 'DOUBTFUL']]
     
     if not significant_injuries:
         return 'Both teams healthy'
