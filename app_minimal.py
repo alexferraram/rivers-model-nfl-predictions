@@ -32,7 +32,10 @@ def init_db():
     try:
         conn = get_db_connection()
         if not conn:
+            logger.error("Could not get database connection")
             return False
+        
+        logger.info("Creating database tables...")
         
         # Create predictions table
         conn.execute('''
@@ -65,8 +68,14 @@ def init_db():
         ''')
         
         conn.commit()
+        logger.info("Database tables created successfully")
+        
+        # Verify tables exist
+        cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = cursor.fetchall()
+        logger.info(f"Tables in database: {[table[0] for table in tables]}")
+        
         conn.close()
-        logger.info("Database initialized successfully")
         return True
     except Exception as e:
         logger.error(f"Database initialization error: {e}")
@@ -101,6 +110,21 @@ def index():
 def home():
     """Direct access to home page with generate predictions form"""
     return render_template('index.html', message="Welcome to The RIVERS Model - AI NFL Predictions")
+
+@app.route('/init-db')
+def init_database():
+    """Manually initialize database"""
+    try:
+        success = init_db()
+        if success:
+            flash('Database initialized successfully!', 'success')
+        else:
+            flash('Database initialization failed!', 'error')
+        return redirect(url_for('index'))
+    except Exception as e:
+        logger.error(f"Manual database init error: {e}")
+        flash('Database initialization error!', 'error')
+        return redirect(url_for('index'))
 
 @app.route('/week/<int:week>')
 def week_predictions(week):
