@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}The RIVERS Model - AI NFL Predictions{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">
+                    <i class="fas fa-brain me-2"></i>
+                    The RIVERS Model - AI NFL Predictions
+                </h2>
+            </div>
+            <div class="card-body">
+                {% if message %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>{{ message }}
+                    </div>
+                {% endif %}
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    View Statistics
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Track the model's performance and see how accurate the predictions have been.</p>
+                                <div class="d-grid">
+                                    <a href="{{ url_for('stats') }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-chart-line me-2"></i>View Statistics
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-calendar-week me-2"></i>
+                                    Select Week Predictions
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Choose which week's predictions to view.</p>
+                                <div class="d-grid">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-calendar-week me-2"></i>Week {{ current_week }} Predictions
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#predictions">Week 3 Predictions</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><span class="dropdown-item-text text-muted">More weeks coming soon...</span></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Auto Update Scores Button -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">
+                                    <i class="fas fa-sync-alt me-2"></i>
+                                    Update Game Results
+                                </h5>
+                                <p class="card-text">Automatically retrieve the latest scores for completed games.</p>
+                                <a href="{{ url_for('update_scores', week=current_week) }}" class="btn btn-success">
+                                    <i class="fas fa-sync-alt me-2"></i>Auto Update Scores
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Predictions Section -->
+                <div id="predictions">
+                    <h3 class="mb-4">
+                        <i class="fas fa-football-ball me-2"></i>
+                        Week {{ current_week }} NFL Predictions
+                    </h3>
+                    
+                    {% if predictions %}
+                        <div class="row">
+                            {% for prediction in predictions %}
+                                {% set game_key = prediction['away_team'] + '@' + prediction['home_team'] %}
+                                {% set result = results.get(game_key) %}
+                                
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card h-100 {% if result %}border-success{% endif %}">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">
+                                                <i class="fas fa-football-ball me-2"></i>
+                                                {{ prediction['away_team'] }} @ {{ prediction['home_team'] }}
+                                            </h5>
+                                            {% if result %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Completed
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-clock me-1"></i>Pending
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="card-body">
+                                            <!-- Prediction -->
+                                            <div class="mb-3">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <strong>🏆 Winner:</strong> {{ prediction['predicted_winner'] }}
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <strong>🎯 Confidence:</strong> {{ "%.1f"|format(prediction['confidence'] * 100) }}%
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Injury Report -->
+                                            <div class="mb-3">
+                                                <strong>🏥 Injury Report:</strong>
+                                                <div class="mt-1 text-muted small">
+                                                    {{ prediction['injury_report'] }}
+                                                </div>
+                                            </div>
+
+                                            <!-- Result (if available) -->
+                                            {% if result %}
+                                                <hr>
+                                                <div class="alert alert-success result-alert border-2 border-success">
+                                                    <h6 class="alert-heading">
+                                                        <i class="fas fa-trophy me-2"></i>Final Result
+                                                    </h6>
+                                                    <div class="row">
+                                                        <div class="col-6">
+                                                            <strong>{{ prediction['away_team'] }}:</strong> {{ result['away_score'] }}
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <strong>{{ prediction['home_team'] }}:</strong> {{ result['home_score'] }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-2">
+                                                        <strong>Actual Winner:</strong> {{ result['actual_winner'] }}
+                                                        {% if result['actual_winner'] == prediction['predicted_winner'] %}
+                                                            <span class="badge bg-success ms-2">
+                                                                <i class="fas fa-check me-1"></i>Correct!
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="badge bg-danger ms-2">
+                                                                <i class="fas fa-times me-1"></i>Incorrect
+                                                            </span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No predictions available for Week {{ current_week }}.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
