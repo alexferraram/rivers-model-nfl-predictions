@@ -277,12 +277,44 @@ def week_predictions(week):
         # Get predictions
         predictions = get_week3_predictions()
         
-        return render_template('week_simple.html', 
-                             predictions=predictions,
-                             current_week=week,
-                             week=week,
-                             season=2025,
-                             available_weeks=[3])
+        # Return simple HTML directly to avoid template issues
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Week {week} - The RIVERS Model</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        </head>
+        <body>
+            <div class="container mt-4">
+                <h1>Week {week} NFL Predictions</h1>
+                <div class="row">
+        """
+        
+        for prediction in predictions:
+            html += f"""
+                    <div class="col-lg-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>{prediction['away_team']} @ {prediction['home_team']}</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Winner:</strong> {prediction['winner']}</p>
+                                <p><strong>Confidence:</strong> {prediction['confidence']:.1f}%</p>
+                                <p><strong>Injury Report:</strong> {prediction['injury_report']}</p>
+                            </div>
+                        </div>
+                    </div>
+            """
+        
+        html += """
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return html
         
     except Exception as e:
         logger.error(f"Error in week_predictions route: {e}")
