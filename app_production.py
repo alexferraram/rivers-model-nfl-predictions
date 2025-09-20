@@ -1,82 +1,11 @@
 """
-Simple Blog-Style NFL Predictions Website
-Just displays the RIVERS model predictions directly
+Working NFL Predictions Website
 """
 
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-import sqlite3
-import json
+from flask import Flask
 import os
-from datetime import datetime
-import logging
-import requests
-from bs4 import BeautifulSoup
-import re
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-change-this-in-production'
-
-def get_db_connection():
-    """Get database connection"""
-    try:
-        conn = sqlite3.connect('nfl_predictions.db')
-        conn.row_factory = sqlite3.Row
-        return conn
-    except Exception as e:
-        logger.error(f"Database connection error: {e}")
-        return None
-
-def init_db():
-    """Initialize database with tables"""
-    try:
-        conn = get_db_connection()
-        if not conn:
-            logger.error("Could not get database connection")
-            return False
-        
-        logger.info("Creating database tables...")
-        
-        # Create predictions table
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS predictions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                week INTEGER NOT NULL,
-                season INTEGER NOT NULL,
-                home_team TEXT NOT NULL,
-                away_team TEXT NOT NULL,
-                predicted_winner TEXT NOT NULL,
-                confidence REAL NOT NULL,
-                injury_report TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        # Create results table
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS results (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                week INTEGER NOT NULL,
-                season INTEGER NOT NULL,
-                home_team TEXT NOT NULL,
-                away_team TEXT NOT NULL,
-                home_score INTEGER,
-                away_score INTEGER,
-                actual_winner TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        conn.commit()
-        logger.info("Database tables created successfully")
-        conn.close()
-        return True
-    except Exception as e:
-        logger.error(f"Database initialization error: {e}")
-        return False
 
 def get_week3_predictions():
     """Get Week 3 predictions - hardcoded RIVERS model results"""
@@ -195,227 +124,144 @@ def get_week3_predictions():
         }
     ]
 
-def fetch_nfl_scores_from_espn(week, season=2025):
-    """Fetch actual NFL scores from ESPN"""
-    try:
-        logger.info(f"Fetching NFL scores from ESPN for Week {week}, Season {season}")
-        
-        # ESPN NFL scores URL
-        url = f"https://www.espn.com/nfl/scoreboard/_/week/{week}/year/{season}/seasontype/2"
-        
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-        
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        
-        soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # Look for score elements
-        scores = []
-        
-        # Try multiple selectors for ESPN's structure
-        score_selectors = [
-            '.ScoreCell__Score',
-            '.ScoreCell__Score--score',
-            '.ScoreboardScoreCell__Score',
-            '.ScoreboardScoreCell__Score--score',
-            '.ScoreCell',
-            '.ScoreboardScoreCell'
-        ]
-        
-        for selector in score_selectors:
-            score_elements = soup.select(selector)
-            if score_elements:
-                logger.info(f"Found {len(score_elements)} score elements with selector: {selector}")
-                break
-        
-        if not score_elements:
-            logger.warning("No score elements found with any selector")
-            return []
-        
-        # Extract scores and team names
-        for i in range(0, len(score_elements), 2):
-            if i + 1 < len(score_elements):
-                home_score = score_elements[i].get_text(strip=True)
-                away_score = score_elements[i + 1].get_text(strip=True)
-                
-                # Try to get team names from nearby elements
-                team_elements = soup.select('.ScoreCell__TeamName, .ScoreboardScoreCell__TeamName')
-                if len(team_elements) >= 2:
-                    home_team = team_elements[i].get_text(strip=True)
-                    away_team = team_elements[i + 1].get_text(strip=True)
-                    
-                    scores.append({
-                        'home_team': home_team,
-                        'away_team': away_team,
-                        'home_score': int(home_score) if home_score.isdigit() else None,
-                        'away_score': int(away_score) if away_score.isdigit() else None
-                    })
-        
-        logger.info(f"Extracted {len(scores)} scores from ESPN")
-        return scores
-        
-    except Exception as e:
-        logger.error(f"Error fetching scores from ESPN: {e}")
-        return []
-
 @app.route('/')
 def index():
-    """Home page - redirect to Week 3"""
-    return redirect(url_for('week_predictions', week=3))
+    """Home page"""
+    return redirect_to_week3()
 
-@app.route('/week/<int:week>')
-def week_predictions(week):
-    """Display predictions for a specific week"""
-    try:
-        if week != 3:
-            flash(f"Week {week} predictions not available yet. Only Week 3 is available.", 'info')
-            return redirect(url_for('week_predictions', week=3))
-        
-        # Get predictions
-        predictions = get_week3_predictions()
-        
-        # Return simple HTML directly to avoid template issues
-        html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Week {week} - The RIVERS Model</title>
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-        </head>
-        <body>
-            <div class="container mt-4">
-                <h1>Week {week} NFL Predictions</h1>
-                <div class="row">
-        """
-        
-        for prediction in predictions:
-            html += f"""
-                    <div class="col-lg-6 mb-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5>{prediction['away_team']} @ {prediction['home_team']}</h5>
-                            </div>
-                            <div class="card-body">
-                                <p><strong>Winner:</strong> {prediction['winner']}</p>
-                                <p><strong>Confidence:</strong> {prediction['confidence']:.1f}%</p>
-                                <p><strong>Injury Report:</strong> {prediction['injury_report']}</p>
-                            </div>
-                        </div>
-                    </div>
-            """
-        
-        html += """
+@app.route('/week/3')
+def week3():
+    """Week 3 predictions"""
+    predictions = get_week3_predictions()
+    
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Week 3 - The RIVERS Model</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+            body { background-color: #f8f9fa; }
+            .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); }
+            .card-header { background: linear-gradient(135deg, #007bff, #0056b3); color: white; }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="/">The RIVERS Model</a>
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="/week/3">Week 3 Predictions</a>
+                    <a class="nav-link" href="/stats">Statistics</a>
                 </div>
             </div>
-        </body>
-        </html>
+        </nav>
+        
+        <div class="container mt-4">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">Week 3 NFL Predictions</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+    """
+    
+    for prediction in predictions:
+        html += f"""
+                        <div class="col-lg-6 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>{prediction['away_team']} @ {prediction['home_team']}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>🏆 Winner:</strong> {prediction['winner']}</p>
+                                    <p><strong>🎯 Confidence:</strong> {prediction['confidence']:.1f}%</p>
+                                    <p><strong>🏥 Injury Report:</strong> {prediction['injury_report']}</p>
+                                </div>
+                            </div>
+                        </div>
         """
-        
-        return html
-        
-    except Exception as e:
-        logger.error(f"Error in week_predictions route: {e}")
-        flash("Error loading predictions. Please try again.", 'error')
-        return redirect(url_for('index'))
-
-@app.route('/update_scores/<int:week>')
-def update_scores(week):
-    """Auto update scores for a specific week"""
-    try:
-        logger.info(f"Updating scores for Week {week}")
-        
-        # Fetch scores from ESPN
-        scores = fetch_nfl_scores_from_espn(week)
-        
-        if not scores:
-            flash("No completed games found to update.", 'info')
-            return redirect(url_for('week_predictions', week=week))
-        
-        # Update database with scores
-        conn = get_db_connection()
-        if conn:
-            for score in scores:
-                # Determine actual winner
-                if score['home_score'] and score['away_score']:
-                    if score['home_score'] > score['away_score']:
-                        actual_winner = score['home_team']
-                    elif score['away_score'] > score['home_score']:
-                        actual_winner = score['away_team']
-                    else:
-                        actual_winner = 'TIE'
-                    
-                    # Insert or update result
-                    conn.execute('''
-                        INSERT OR REPLACE INTO results 
-                        (week, season, home_team, away_team, home_score, away_score, actual_winner)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ''', (week, 2025, score['home_team'], score['away_team'], 
-                          score['home_score'], score['away_score'], actual_winner))
-            
-            conn.commit()
-            conn.close()
-            
-            flash(f"Updated {len(scores)} game results from ESPN.", 'success')
-        else:
-            flash("Database connection error.", 'error')
-        
-        return redirect(url_for('week_predictions', week=week))
-        
-    except Exception as e:
-        logger.error(f"Error updating scores: {e}")
-        flash("Error updating scores. Please try again.", 'error')
-        return redirect(url_for('week_predictions', week=week))
+    
+    html += """
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html
 
 @app.route('/stats')
 def stats():
-    """Display model statistics - simple version without database"""
-    try:
-        logger.info("Loading simple stats page")
-        return render_template('stats_simple.html', 
-                             total_predictions=16,
-                             correct_predictions=0,
-                             accuracy=0.0,
-                             weekly_stats=[{
-                                 'week': 3,
-                                 'season': 2025,
-                                 'predictions': [],
-                                 'total': 16,
-                                 'correct': 0,
-                                 'accuracy': 0.0
-                             }])
+    """Statistics page"""
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Statistics - The RIVERS Model</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="/">The RIVERS Model</a>
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="/week/3">Week 3 Predictions</a>
+                    <a class="nav-link active" href="/stats">Statistics</a>
+                </div>
+            </div>
+        </nav>
         
-    except Exception as e:
-        logger.error(f"Error in stats route: {e}")
-        return render_template('stats_simple.html', 
-                             total_predictions=16,
-                             correct_predictions=0,
-                             accuracy=0.0,
-                             weekly_stats=[{
-                                 'week': 3,
-                                 'season': 2025,
-                                 'predictions': [],
-                                 'total': 16,
-                                 'correct': 0,
-                                 'accuracy': 0.0
-                             }])
+        <div class="container mt-4">
+            <h1>Model Statistics</h1>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Predictions</h5>
+                            <h2 class="text-primary">16</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Correct Predictions</h5>
+                            <h2 class="text-success">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Accuracy</h5>
+                            <h2 class="text-info">0.0%</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
 
-@app.errorhandler(404)
-def not_found(error):
-    return render_template('404.html'), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    return render_template('500.html'), 500
+def redirect_to_week3():
+    """Redirect to week 3"""
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta http-equiv="refresh" content="0; url=/week/3">
+    </head>
+    <body>
+        <p>Redirecting to Week 3 predictions...</p>
+        <a href="/week/3">Click here if not redirected automatically</a>
+    </body>
+    </html>
+    """
 
 if __name__ == '__main__':
-    # Initialize database
-    init_db()
-    
-    # Get port from environment variable (for deployment platforms)
     port = int(os.environ.get('PORT', 8080))
-    
-    # Run the app
     app.run(host='0.0.0.0', port=port, debug=False)
