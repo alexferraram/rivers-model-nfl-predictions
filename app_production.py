@@ -279,6 +279,7 @@ def week_predictions(week):
         
         return render_template('week_predictions.html', 
                              predictions=predictions,
+                             current_week=week,
                              week=week,
                              season=2025,
                              available_weeks=[3])
