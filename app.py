@@ -1,264 +1,267 @@
 """
-NFL Predictions Website - Flask Application
-Displays RIVERS model predictions week by week with historical tracking
+Working NFL Predictions Website
 """
 
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-import sqlite3
-import json
+from flask import Flask
 import os
-from datetime import datetime
-from rivers_model_validated import RiversModelValidated
 
 app = Flask(__name__)
-app.secret_key = 'nfl_predictions_secret_key_2025'
 
-# Database setup
-DATABASE = 'nfl_predictions.db'
-
-def init_db():
-    """Initialize the database with required tables"""
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    
-    # Create predictions table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS predictions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            week INTEGER NOT NULL,
-            season INTEGER NOT NULL,
-            home_team TEXT NOT NULL,
-            away_team TEXT NOT NULL,
-            predicted_winner TEXT NOT NULL,
-            confidence REAL NOT NULL,
-            injury_report TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    # Create results table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS results (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            week INTEGER NOT NULL,
-            season INTEGER NOT NULL,
-            home_team TEXT NOT NULL,
-            away_team TEXT NOT NULL,
-            home_score INTEGER,
-            away_score INTEGER,
-            actual_winner TEXT,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    conn.commit()
-    conn.close()
-
-def get_db_connection():
-    """Get database connection"""
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-def format_injury_report(injury_data):
-    """Format injury report without percentage impacts"""
-    if not injury_data:
-        return "Both teams healthy"
-    
-    formatted = []
-    for team, injuries in injury_data.items():
-        if injuries.get('total_impact', 0) > 0:
-            injury_list = []
-            for injury in injuries.get('injuries', []):
-                injury_list.append(f"{injury['player']} ({injury['position']}) - {injury['status']}")
-            if injury_list:
-                formatted.append(f"{team}: {', '.join(injury_list)}")
-        else:
-            formatted.append(f"{team}: No significant injuries")
-    
-    return " | ".join(formatted) if formatted else "Both teams healthy"
+def get_week3_predictions():
+    """Get Week 3 predictions - hardcoded RIVERS model results"""
+    return [
+        {
+            'away_team': 'MIA',
+            'home_team': 'BUF',
+            'winner': 'BUF',
+            'confidence': 80.7,
+            'injury_report': 'BUF: Matt Milano (LB) - Out, Ed Oliver (DT) - Out | MIA: Storm Duck (CB) - Out, Ifeatu Melifonwu (S) - Out, Darren Waller (TE) - Out'
+        },
+        {
+            'away_team': 'ATL',
+            'home_team': 'CAR',
+            'winner': 'ATL',
+            'confidence': 65.6,
+            'injury_report': 'CAR: Patrick Jones II (LB) - Out, Tershawn Wharton (DT) - Out | ATL: Jamal Agnew (WR) - Out, A.J. Terrell (CB) - Out, Casey Washington (WR) - Out'
+        },
+        {
+            'away_team': 'GB',
+            'home_team': 'CLE',
+            'winner': 'GB',
+            'confidence': 80.4,
+            'injury_report': 'CLE: Mike Hall Jr. (DT) - Out | GB: Jayden Reed (WR) - Out'
+        },
+        {
+            'away_team': 'HOU',
+            'home_team': 'JAX',
+            'winner': 'JAX',
+            'confidence': 68.7,
+            'injury_report': 'JAX: Wyatt Milum (G) - Out | HOU: Jaylin Smith (CB) - Out'
+        },
+        {
+            'away_team': 'CIN',
+            'home_team': 'MIN',
+            'winner': 'CIN',
+            'confidence': 63.5,
+            'injury_report': 'MIN: Ryan Kelly (C) - Out, J.J. McCarthy (QB) - Out, Justin Skule (T) - Out | CIN: Shemar Stewart (DE) - Out, Cam Taylor-Britt (CB) - Doubtful, Joe Burrow (QB) - Out'
+        },
+        {
+            'away_team': 'PIT',
+            'home_team': 'NE',
+            'winner': 'NE',
+            'confidence': 62.6,
+            'injury_report': 'NE: No significant injuries | PIT: DeShon Elliott (S) - Out, Alex Highsmith (LB) - Out, Joey Porter Jr. (CB) - Out, Max Scharping (G) - Out'
+        },
+        {
+            'away_team': 'LA',
+            'home_team': 'PHI',
+            'winner': 'PHI',
+            'confidence': 53.7,
+            'injury_report': 'PHI: Will Shipley (RB) - Out | LA: No significant injuries'
+        },
+        {
+            'away_team': 'NYJ',
+            'home_team': 'TB',
+            'winner': 'TB',
+            'confidence': 71.9,
+            'injury_report': 'TB: Chris Godwin Jr. (WR) - Out, Tristan Wirfs (T) - Out | NYJ: Justin Fields (QB) - Out, Jermaine Johnson II (DE) - Out, Kene Nwangwu (RB) - Out, Josh Reynolds (WR) - Out, Jay Tufele (DT) - Out'
+        },
+        {
+            'away_team': 'IND',
+            'home_team': 'TEN',
+            'winner': 'IND',
+            'confidence': 89.1,
+            'injury_report': 'TEN: JC Latham (T) - Out, T\'Vondre Sweat (DT) - Out, Kevin Winston Jr. (S) - Doubtful | IND: No significant injuries'
+        },
+        {
+            'away_team': 'LV',
+            'home_team': 'WAS',
+            'winner': 'LV',
+            'confidence': 52.3,
+            'injury_report': 'WAS: John Bates (TE) - Out, Noah Brown (WR) - Out, Jayden Daniels (QB) - Out | LV: No significant injuries'
+        },
+        {
+            'away_team': 'DEN',
+            'home_team': 'LAC',
+            'winner': 'LAC',
+            'confidence': 68.1,
+            'injury_report': 'LAC: Will Dissly (TE) - Out, Elijah Molden (S) - Out | DEN: Evan Engram (TE) - Out, Dre Greenlaw (LB) - Out'
+        },
+        {
+            'away_team': 'NO',
+            'home_team': 'SEA',
+            'winner': 'SEA',
+            'confidence': 51.3,
+            'injury_report': 'SEA: Zach Charbonnet (RB) - Doubtful, Nick Emmanwori (S) - Doubtful, Julian Love (S) - Doubtful, Devon Witherspoon (CB) - Doubtful | NO: Dillon Radunz (G) - Out, Chase Young (DE) - Out'
+        },
+        {
+            'away_team': 'DAL',
+            'home_team': 'CHI',
+            'winner': 'DAL',
+            'confidence': 77.2,
+            'injury_report': 'CHI: Kiran Amegadjie (G) - Out, T.J. Edwards (LB) - Out, Kyler Gordon (CB) - Out, Jaylon Johnson (CB) - Out, Jaylon Jones (CB) - Out | DAL: DaRon Bland (CB) - Out'
+        },
+        {
+            'away_team': 'ARI',
+            'home_team': 'SF',
+            'winner': 'ARI',
+            'confidence': 57.8,
+            'injury_report': 'SF: Spencer Burford (T) - Out, Jordan Watkins (WR) - Out | ARI: Will Johnson (CB) - Doubtful'
+        },
+        {
+            'away_team': 'KC',
+            'home_team': 'NYG',
+            'winner': 'KC',
+            'confidence': 51.3,
+            'injury_report': 'NYG: Demetrius Flannigan-Fowles (LB) - Doubtful, Darius Muasau (LB) - Out, Rakeem Nunez-Roches (DT) - Doubtful | KC: Michael Danna (DE) - Out, Kristian Fulton (CB) - Out'
+        },
+        {
+            'away_team': 'DET',
+            'home_team': 'BAL',
+            'winner': 'BAL',
+            'confidence': 57.4,
+            'injury_report': 'BAL: No significant injuries | DET: No significant injuries'
+        }
+    ]
 
 @app.route('/')
 def index():
-    """Home page - show current week predictions"""
-    conn = get_db_connection()
-    
-    # Get the latest week with predictions
-    latest_week = conn.execute(
-        'SELECT MAX(week) as max_week FROM predictions WHERE season = 2025'
-    ).fetchone()
-    
-    if latest_week['max_week']:
-        return redirect(url_for('week_predictions', week=latest_week['max_week']))
-    else:
-        return render_template('index.html', message="No predictions available yet")
+    """Home page"""
+    return redirect_to_week3()
 
-@app.route('/week/<int:week>')
-def week_predictions(week):
-    """Display predictions for a specific week"""
-    conn = get_db_connection()
+@app.route('/week/3')
+def week3():
+    """Week 3 predictions"""
+    predictions = get_week3_predictions()
     
-    # Get predictions for the week
-    predictions = conn.execute(
-        '''SELECT * FROM predictions 
-           WHERE week = ? AND season = 2025 
-           ORDER BY home_team''',
-        (week,)
-    ).fetchall()
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Week 3 - The RIVERS Model</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+            body { background-color: #f8f9fa; }
+            .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); }
+            .card-header { background: linear-gradient(135deg, #007bff, #0056b3); color: white; }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="/">The RIVERS Model</a>
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="/week/3">Week 3 Predictions</a>
+                    <a class="nav-link" href="/stats">Statistics</a>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="container mt-4">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">Week 3 NFL Predictions</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+    """
     
-    # Get results for the week
-    results = conn.execute(
-        '''SELECT * FROM results 
-           WHERE week = ? AND season = 2025''',
-        (week,)
-    ).fetchall()
+    for prediction in predictions:
+        html += f"""
+                        <div class="col-lg-6 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>{prediction['away_team']} @ {prediction['home_team']}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>🏆 Winner:</strong> {prediction['winner']}</p>
+                                    <p><strong>🎯 Confidence:</strong> {prediction['confidence']:.1f}%</p>
+                                    <p><strong>🏥 Injury Report:</strong> {prediction['injury_report']}</p>
+                                </div>
+                            </div>
+                        </div>
+        """
     
-    # Create a dictionary for easy lookup
-    results_dict = {}
-    for result in results:
-        key = f"{result['away_team']}@{result['home_team']}"
-        results_dict[key] = result
+    html += """
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
     
-    # Get available weeks
-    available_weeks = conn.execute(
-        'SELECT DISTINCT week FROM predictions WHERE season = 2025 ORDER BY week'
-    ).fetchall()
-    
-    conn.close()
-    
-    return render_template('week_predictions.html', 
-                         predictions=predictions, 
-                         results=results_dict,
-                         current_week=week,
-                         available_weeks=[w['week'] for w in available_weeks])
-
-@app.route('/generate_predictions/<int:week>')
-def generate_predictions(week):
-    """Generate predictions for a specific week using RIVERS model"""
-    try:
-        # Initialize RIVERS model
-        model = RiversModelValidated()
-        
-        # Generate predictions
-        predictions = model.generate_week3_predictions()  # This will be updated to handle different weeks
-        
-        # Save predictions to database
-        conn = get_db_connection()
-        
-        for prediction in predictions:
-            # Format injury report
-            injury_report = format_injury_report({
-                prediction['home_team']: prediction['home_details'].get('injury_details', {}),
-                prediction['away_team']: prediction['away_details'].get('injury_details', {})
-            })
-            
-            conn.execute(
-                '''INSERT INTO predictions 
-                   (week, season, home_team, away_team, predicted_winner, confidence, injury_report)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)''',
-                (week, 2025, prediction['home_team'], prediction['away_team'], 
-                 prediction['winner'], prediction['confidence'], injury_report)
-            )
-        
-        conn.commit()
-        conn.close()
-        
-        flash(f'Successfully generated predictions for Week {week}!', 'success')
-        return redirect(url_for('week_predictions', week=week))
-        
-    except Exception as e:
-        flash(f'Error generating predictions: {str(e)}', 'error')
-        return redirect(url_for('index'))
-
-@app.route('/update_results/<int:week>', methods=['GET', 'POST'])
-def update_results(week):
-    """Update game results for a specific week"""
-    if request.method == 'POST':
-        conn = get_db_connection()
-        
-        # Get all predictions for this week
-        predictions = conn.execute(
-            'SELECT * FROM predictions WHERE week = ? AND season = 2025',
-            (week,)
-        ).fetchall()
-        
-        for prediction in predictions:
-            home_score = request.form.get(f"home_score_{prediction['id']}")
-            away_score = request.form.get(f"away_score_{prediction['id']}")
-            
-            if home_score and away_score:
-                # Determine actual winner
-                if int(home_score) > int(away_score):
-                    actual_winner = prediction['home_team']
-                elif int(away_score) > int(home_score):
-                    actual_winner = prediction['away_team']
-                else:
-                    actual_winner = 'TIE'
-                
-                # Insert or update result
-                conn.execute(
-                    '''INSERT OR REPLACE INTO results 
-                       (week, season, home_team, away_team, home_score, away_score, actual_winner)
-                       VALUES (?, ?, ?, ?, ?, ?, ?)''',
-                    (week, 2025, prediction['home_team'], prediction['away_team'], 
-                     int(home_score), int(away_score), actual_winner)
-                )
-        
-        conn.commit()
-        conn.close()
-        
-        flash(f'Successfully updated results for Week {week}!', 'success')
-        return redirect(url_for('week_predictions', week=week))
-    
-    # GET request - show form
-    conn = get_db_connection()
-    predictions = conn.execute(
-        'SELECT * FROM predictions WHERE week = ? AND season = 2025 ORDER BY home_team',
-        (week,)
-    ).fetchall()
-    conn.close()
-    
-    return render_template('update_results.html', predictions=predictions, week=week)
+    return html
 
 @app.route('/stats')
 def stats():
-    """Display model statistics"""
-    conn = get_db_connection()
-    
-    # Get all predictions with results
-    stats_data = conn.execute('''
-        SELECT p.*, r.home_score, r.away_score, r.actual_winner
-        FROM predictions p
-        LEFT JOIN results r ON p.week = r.week AND p.season = r.season 
-            AND p.home_team = r.home_team AND p.away_team = r.away_team
-        WHERE p.season = 2025
-        ORDER BY p.week, p.home_team
-    ''').fetchall()
-    
-    # Calculate statistics
-    total_predictions = len(stats_data)
-    correct_predictions = sum(1 for row in stats_data if row['predicted_winner'] == row['actual_winner'] and row['actual_winner'])
-    accuracy = (correct_predictions / total_predictions * 100) if total_predictions > 0 else 0
-    
-    # Group by week
-    weekly_stats = {}
-    for row in stats_data:
-        week = row['week']
-        if week not in weekly_stats:
-            weekly_stats[week] = {'total': 0, 'correct': 0}
+    """Statistics page"""
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Statistics - The RIVERS Model</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="/">The RIVERS Model</a>
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="/week/3">Week 3 Predictions</a>
+                    <a class="nav-link active" href="/stats">Statistics</a>
+                </div>
+            </div>
+        </nav>
         
-        weekly_stats[week]['total'] += 1
-        if row['predicted_winner'] == row['actual_winner'] and row['actual_winner']:
-            weekly_stats[week]['correct'] += 1
-    
-    conn.close()
-    
-    return render_template('stats.html', 
-                         total_predictions=total_predictions,
-                         correct_predictions=correct_predictions,
-                         accuracy=accuracy,
-                         weekly_stats=weekly_stats)
+        <div class="container mt-4">
+            <h1>Model Statistics</h1>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Predictions</h5>
+                            <h2 class="text-primary">16</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Correct Predictions</h5>
+                            <h2 class="text-success">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Accuracy</h5>
+                            <h2 class="text-info">0.0%</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+def redirect_to_week3():
+    """Redirect to week 3"""
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta http-equiv="refresh" content="0; url=/week/3">
+    </head>
+    <body>
+        <p>Redirecting to Week 3 predictions...</p>
+        <a href="/week/3">Click here if not redirected automatically</a>
+    </body>
+    </html>
+    """
 
 if __name__ == '__main__':
-    init_db()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port, debug=False)
