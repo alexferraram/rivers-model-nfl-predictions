@@ -536,7 +536,7 @@ def stats():
     try:
         # For now, return a simple stats page without database dependency
         logger.info("Loading stats page - using fallback data")
-        return render_template('stats_complete.html', 
+        return render_template('stats_simple.html', 
                              total_predictions=16,
                              correct_predictions=0,
                              accuracy=0.0,
@@ -551,7 +551,7 @@ def stats():
         
     except Exception as e:
         logger.error(f"Error in stats route: {e}")
-        return render_template('stats_complete.html', 
+        return render_template('stats_simple.html', 
                              total_predictions=0,
                              correct_predictions=0,
                              accuracy=0.0,
