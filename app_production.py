@@ -1,6 +1,6 @@
 """
-NFL Predictions Website - 2025 Week 3 Version
-Forces correct 2025 NFL schedule with no caching issues
+Simple Blog-Style NFL Predictions Website
+Just displays the RIVERS model predictions directly
 """
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
@@ -72,20 +72,131 @@ def init_db():
         
         conn.commit()
         logger.info("Database tables created successfully")
-        
-        # Verify tables exist
-        cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        tables = cursor.fetchall()
-        logger.info(f"Tables in database: {[table[0] for table in tables]}")
-        
         conn.close()
         return True
     except Exception as e:
         logger.error(f"Database initialization error: {e}")
         return False
 
+def get_week3_predictions():
+    """Get Week 3 predictions - hardcoded RIVERS model results"""
+    return [
+        {
+            'away_team': 'MIA',
+            'home_team': 'BUF',
+            'winner': 'BUF',
+            'confidence': 80.7,
+            'injury_report': 'BUF: Matt Milano (LB) - Out, Ed Oliver (DT) - Out | MIA: Storm Duck (CB) - Out, Ifeatu Melifonwu (S) - Out, Darren Waller (TE) - Out'
+        },
+        {
+            'away_team': 'ATL',
+            'home_team': 'CAR',
+            'winner': 'ATL',
+            'confidence': 65.6,
+            'injury_report': 'CAR: Patrick Jones II (LB) - Out, Tershawn Wharton (DT) - Out | ATL: Jamal Agnew (WR) - Out, A.J. Terrell (CB) - Out, Casey Washington (WR) - Out'
+        },
+        {
+            'away_team': 'GB',
+            'home_team': 'CLE',
+            'winner': 'GB',
+            'confidence': 80.4,
+            'injury_report': 'CLE: Mike Hall Jr. (DT) - Out | GB: Jayden Reed (WR) - Out'
+        },
+        {
+            'away_team': 'HOU',
+            'home_team': 'JAX',
+            'winner': 'JAX',
+            'confidence': 68.7,
+            'injury_report': 'JAX: Wyatt Milum (G) - Out | HOU: Jaylin Smith (CB) - Out'
+        },
+        {
+            'away_team': 'CIN',
+            'home_team': 'MIN',
+            'winner': 'CIN',
+            'confidence': 63.5,
+            'injury_report': 'MIN: Ryan Kelly (C) - Out, J.J. McCarthy (QB) - Out, Justin Skule (T) - Out | CIN: Shemar Stewart (DE) - Out, Cam Taylor-Britt (CB) - Doubtful, Joe Burrow (QB) - Out'
+        },
+        {
+            'away_team': 'PIT',
+            'home_team': 'NE',
+            'winner': 'NE',
+            'confidence': 62.6,
+            'injury_report': 'NE: No significant injuries | PIT: DeShon Elliott (S) - Out, Alex Highsmith (LB) - Out, Joey Porter Jr. (CB) - Out, Max Scharping (G) - Out'
+        },
+        {
+            'away_team': 'LA',
+            'home_team': 'PHI',
+            'winner': 'PHI',
+            'confidence': 53.7,
+            'injury_report': 'PHI: Will Shipley (RB) - Out | LA: No significant injuries'
+        },
+        {
+            'away_team': 'NYJ',
+            'home_team': 'TB',
+            'winner': 'TB',
+            'confidence': 71.9,
+            'injury_report': 'TB: Chris Godwin Jr. (WR) - Out, Tristan Wirfs (T) - Out | NYJ: Justin Fields (QB) - Out, Jermaine Johnson II (DE) - Out, Kene Nwangwu (RB) - Out, Josh Reynolds (WR) - Out, Jay Tufele (DT) - Out'
+        },
+        {
+            'away_team': 'IND',
+            'home_team': 'TEN',
+            'winner': 'IND',
+            'confidence': 89.1,
+            'injury_report': 'TEN: JC Latham (T) - Out, T\'Vondre Sweat (DT) - Out, Kevin Winston Jr. (S) - Doubtful | IND: No significant injuries'
+        },
+        {
+            'away_team': 'LV',
+            'home_team': 'WAS',
+            'winner': 'LV',
+            'confidence': 52.3,
+            'injury_report': 'WAS: John Bates (TE) - Out, Noah Brown (WR) - Out, Jayden Daniels (QB) - Out | LV: No significant injuries'
+        },
+        {
+            'away_team': 'DEN',
+            'home_team': 'LAC',
+            'winner': 'LAC',
+            'confidence': 68.1,
+            'injury_report': 'LAC: Will Dissly (TE) - Out, Elijah Molden (S) - Out | DEN: Evan Engram (TE) - Out, Dre Greenlaw (LB) - Out'
+        },
+        {
+            'away_team': 'NO',
+            'home_team': 'SEA',
+            'winner': 'SEA',
+            'confidence': 51.3,
+            'injury_report': 'SEA: Zach Charbonnet (RB) - Doubtful, Nick Emmanwori (S) - Doubtful, Julian Love (S) - Doubtful, Devon Witherspoon (CB) - Doubtful | NO: Dillon Radunz (G) - Out, Chase Young (DE) - Out'
+        },
+        {
+            'away_team': 'DAL',
+            'home_team': 'CHI',
+            'winner': 'DAL',
+            'confidence': 77.2,
+            'injury_report': 'CHI: Kiran Amegadjie (G) - Out, T.J. Edwards (LB) - Out, Kyler Gordon (CB) - Out, Jaylon Johnson (CB) - Out, Jaylon Jones (CB) - Out | DAL: DaRon Bland (CB) - Out'
+        },
+        {
+            'away_team': 'ARI',
+            'home_team': 'SF',
+            'winner': 'ARI',
+            'confidence': 57.8,
+            'injury_report': 'SF: Spencer Burford (T) - Out, Jordan Watkins (WR) - Out | ARI: Will Johnson (CB) - Doubtful'
+        },
+        {
+            'away_team': 'KC',
+            'home_team': 'NYG',
+            'winner': 'KC',
+            'confidence': 51.3,
+            'injury_report': 'NYG: Demetrius Flannigan-Fowles (LB) - Doubtful, Darius Muasau (LB) - Out, Rakeem Nunez-Roches (DT) - Doubtful | KC: Michael Danna (DE) - Out, Kristian Fulton (CB) - Out'
+        },
+        {
+            'away_team': 'DET',
+            'home_team': 'BAL',
+            'winner': 'BAL',
+            'confidence': 57.4,
+            'injury_report': 'BAL: No significant injuries | DET: No significant injuries'
+        }
+    ]
+
 def fetch_nfl_scores_from_espn(week, season=2025):
-    """Fetch actual NFL scores from ESPN - only returns completed games"""
+    """Fetch actual NFL scores from ESPN"""
     try:
         logger.info(f"Fetching NFL scores from ESPN for Week {week}, Season {season}")
         
@@ -101,258 +212,54 @@ def fetch_nfl_scores_from_espn(week, season=2025):
         
         soup = BeautifulSoup(response.content, 'html.parser')
         
-        games = []
+        # Look for score elements
+        scores = []
         
-        # Try multiple selectors for ESPN's current structure
-        selectors_to_try = [
-            'div[data-testid="scoreboard-game"]',
-            'div.ScoreCell',
-            'div.GameCard',
-            'div.scoreboard-game',
-            'div[class*="Game"]',
-            'div[class*="Score"]'
+        # Try multiple selectors for ESPN's structure
+        score_selectors = [
+            '.ScoreCell__Score',
+            '.ScoreCell__Score--score',
+            '.ScoreboardScoreCell__Score',
+            '.ScoreboardScoreCell__Score--score',
+            '.ScoreCell',
+            '.ScoreboardScoreCell'
         ]
         
-        game_containers = []
-        for selector in selectors_to_try:
-            containers = soup.select(selector)
-            if containers:
-                game_containers = containers
-                logger.info(f"Found {len(containers)} games using selector: {selector}")
+        for selector in score_selectors:
+            score_elements = soup.select(selector)
+            if score_elements:
+                logger.info(f"Found {len(score_elements)} score elements with selector: {selector}")
                 break
         
-        if not game_containers:
-            # Try looking for JSON data in script tags
-            script_tags = soup.find_all('script', type='application/json')
-            for script in script_tags:
-                try:
-                    data = json.loads(script.string)
-                    if 'page' in data and 'content' in data['page']:
-                        logger.info("Found JSON data in script tag")
-                        # Parse JSON data for games
-                        break
-                except:
-                    continue
+        if not score_elements:
+            logger.warning("No score elements found with any selector")
+            return []
         
-        logger.info(f"Found {len(game_containers)} potential game containers")
-        
-        # Parse game data from containers
-        for container in game_containers:
-            try:
-                # Look for team names and scores
-                team_elements = container.find_all(['span', 'div'], class_=re.compile(r'team|name', re.I))
-                score_elements = container.find_all(['span', 'div'], class_=re.compile(r'score|points', re.I))
+        # Extract scores and team names
+        for i in range(0, len(score_elements), 2):
+            if i + 1 < len(score_elements):
+                home_score = score_elements[i].get_text(strip=True)
+                away_score = score_elements[i + 1].get_text(strip=True)
                 
-                if len(team_elements) >= 2 and len(score_elements) >= 2:
-                    away_team = team_elements[0].get_text(strip=True)
-                    home_team = team_elements[1].get_text(strip=True)
-                    away_score = int(score_elements[0].get_text(strip=True))
-                    home_score = int(score_elements[1].get_text(strip=True))
+                # Try to get team names from nearby elements
+                team_elements = soup.select('.ScoreCell__TeamName, .ScoreboardScoreCell__TeamName')
+                if len(team_elements) >= 2:
+                    home_team = team_elements[i].get_text(strip=True)
+                    away_team = team_elements[i + 1].get_text(strip=True)
                     
-                    # Determine winner
-                    winner = home_team if home_score > away_score else away_team
-                    
-                    games.append({
-                        'away_team': away_team,
+                    scores.append({
                         'home_team': home_team,
-                        'away_score': away_score,
-                        'home_score': home_score,
-                        'winner': winner
+                        'away_team': away_team,
+                        'home_score': int(home_score) if home_score.isdigit() else None,
+                        'away_score': int(away_score) if away_score.isdigit() else None
                     })
-                    logger.info(f"Parsed game: {away_team} {away_score} @ {home_team} {home_score}")
-                    
-            except Exception as e:
-                logger.warning(f"Could not parse game container: {e}")
-                continue
         
-        # If no games found through parsing, add known completed games manually
-        if not games and week == 3 and season == 2025:
-            # Add Miami vs Buffalo game (completed Thursday night)
-            games.append({
-                'away_team': 'MIA',
-                'home_team': 'BUF', 
-                'away_score': 21,
-                'home_score': 31,
-                'winner': 'BUF'
-            })
-            logger.info("Added Miami @ Buffalo result manually (no other completed games found)")
+        logger.info(f"Extracted {len(scores)} scores from ESPN")
+        return scores
         
-        logger.info(f"Successfully fetched {len(games)} completed games")
-        return games
-        
-    except requests.RequestException as e:
-        logger.error(f"Error fetching from ESPN: {e}")
-        return []
     except Exception as e:
-        logger.error(f"Unexpected error fetching scores: {e}")
+        logger.error(f"Error fetching scores from ESPN: {e}")
         return []
-
-def get_2025_week3_predictions():
-    """Get CORRECT 2025 Week 3 NFL predictions using ONLY the full RIVERS model"""
-    logger.info("🌊 Running FULL RIVERS Model for 2025 Week 3 predictions")
-    
-    try:
-        # Try to import the full RIVERS model first
-        logger.info("Attempting to import RIVERS model dependencies...")
-        
-        # Check for required dependencies first
-        try:
-            import pandas as pd
-            import numpy as np
-            logger.info("✅ pandas and numpy available")
-        except ImportError as deps_error:
-            logger.error(f"❌ Missing core dependencies: {deps_error}")
-            logger.error("❌ RIVERS model requires pandas and numpy")
-            raise Exception(f"Missing dependencies: {deps_error}")
-        
-        # Try to import the RIVERS model
-        from rivers_model_validated import RiversModelValidated
-        logger.info("✅ RIVERS model imported successfully")
-        
-        # Initialize the model
-        logger.info("Initializing Full RIVERS Model...")
-        model = RiversModelValidated()
-        logger.info("✅ RIVERS model initialized successfully")
-        
-        # Generate Week 3 predictions
-        logger.info("Generating Week 3 predictions with REAL confidence levels...")
-        predictions = model.generate_week3_predictions()
-        logger.info(f"✅ RIVERS model generated {len(predictions)} predictions")
-        
-        # Convert to the format expected by the website
-        formatted_predictions = []
-        for prediction in predictions:
-            formatted_prediction = {
-                'home_team': prediction['home_team'],
-                'away_team': prediction['away_team'],
-                'predicted_winner': prediction['winner'],
-                'confidence': prediction['confidence'],
-                'injury_report': prediction.get('injury_report', 'Both teams healthy')
-            }
-            formatted_predictions.append(formatted_prediction)
-        
-        logger.info(f"✅ Full RIVERS Model generated {len(formatted_predictions)} predictions with REAL confidence levels")
-        return formatted_predictions
-        
-    except ImportError as e:
-        logger.error(f"❌ FULL RIVERS MODEL UNAVAILABLE: {e}")
-        logger.error("❌ Cannot generate predictions without the full RIVERS model")
-        raise Exception("Full RIVERS model required but unavailable")
-    except Exception as e:
-        logger.error(f"❌ RIVERS MODEL ERROR: {e}")
-        logger.error("❌ Cannot generate predictions due to model error")
-        raise Exception(f"RIVERS model failed: {e}")
-
-def get_fallback_predictions():
-    """Fallback predictions if RIVERS model fails"""
-    logger.warning("Using fallback predictions - RIVERS model unavailable")
-    return [
-        {
-            'home_team': 'BUF',
-            'away_team': 'MIA',
-            'predicted_winner': 'BUF',
-            'confidence': 0.75,
-            'injury_report': 'BUF: Matt Milano (LB) - OUT, Ed Oliver (DT) - OUT | MIA: Storm Duck (CB) - OUT'
-        },
-        {
-            'home_team': 'TEN',
-            'away_team': 'IND',
-            'predicted_winner': 'IND',
-            'confidence': 0.68,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'NE',
-            'away_team': 'PIT',
-            'predicted_winner': 'PIT',
-            'confidence': 0.72,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'TB',
-            'away_team': 'NYJ',
-            'predicted_winner': 'TB',
-            'confidence': 0.65,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'WAS',
-            'away_team': 'LV',
-            'predicted_winner': 'LV',
-            'confidence': 0.70,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'PHI',
-            'away_team': 'LA',
-            'predicted_winner': 'PHI',
-            'confidence': 0.78,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'CAR',
-            'away_team': 'ATL',
-            'predicted_winner': 'ATL',
-            'confidence': 0.63,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'MIN',
-            'away_team': 'CIN',
-            'predicted_winner': 'CIN',
-            'confidence': 0.67,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'JAX',
-            'away_team': 'HOU',
-            'predicted_winner': 'JAX',
-            'confidence': 0.73,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'CLE',
-            'away_team': 'GB',
-            'predicted_winner': 'GB',
-            'confidence': 0.69,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'LAC',
-            'away_team': 'DEN',
-            'predicted_winner': 'LAC',
-            'confidence': 0.66,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'SEA',
-            'away_team': 'NO',
-            'predicted_winner': 'SEA',
-            'confidence': 0.64,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'SF',
-            'away_team': 'ARI',
-            'predicted_winner': 'SF',
-            'confidence': 0.71,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'CHI',
-            'away_team': 'DAL',
-            'predicted_winner': 'DAL',
-            'confidence': 0.68,
-            'injury_report': 'Both teams healthy'
-        },
-        {
-            'home_team': 'NYG',
-            'away_team': 'KC',
-            'predicted_winner': 'KC',
-            'confidence': 0.72,
-            'injury_report': 'Both teams healthy'
-        }
-    ]
 
 @app.route('/')
 def index():
@@ -361,219 +268,108 @@ def index():
 
 @app.route('/week/<int:week>')
 def week_predictions(week):
-    """Display predictions for a specific week - 2025 SEASON ONLY"""
+    """Display predictions for a specific week"""
     try:
-        # Initialize database
-        init_db()
+        if week != 3:
+            flash(f"Week {week} predictions not available yet. Only Week 3 is available.", 'info')
+            return redirect(url_for('week_predictions', week=3))
         
-        # Force clear any old predictions for this week
-        conn = get_db_connection()
-        if conn:
-            try:
-                # Clear old predictions for this week
-                conn.execute('DELETE FROM predictions WHERE week = ? AND season = 2025', (week,))
-                conn.commit()
-                logger.info(f"Cleared old predictions for Week {week}")
-                
-                # Get FRESH 2025 Week 3 predictions
-                try:
-                    predictions = get_2025_week3_predictions()
-                except Exception as model_error:
-                    logger.error(f"RIVERS Model failed: {model_error}")
-                    flash(f"❌ RIVERS Model Error: {model_error}", 'error')
-                    return redirect(url_for('week_predictions', week=week))
-                
-                # Save fresh predictions to database
-                for pred in predictions:
-                    conn.execute('''
-                        INSERT INTO predictions (week, season, home_team, away_team, predicted_winner, confidence, injury_report)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ''', (week, 2025, pred['home_team'], pred['away_team'], 
-                          pred['predicted_winner'], pred['confidence'], pred['injury_report']))
-                conn.commit()
-                logger.info(f"Saved FRESH Week {week} predictions to database")
-                
-                # Get any results for this week
-                results_data = conn.execute(
-                    'SELECT * FROM results WHERE week = ? AND season = 2025',
-                    (week,)
-                ).fetchall()
-                
-                results = {}
-                for result in results_data:
-                    game_key = f"{result['away_team']}@{result['home_team']}"
-                    results[game_key] = {
-                        'home_score': result['home_score'],
-                        'away_score': result['away_score'],
-                        'actual_winner': result['actual_winner']
-                    }
-                
-                conn.close()
-                
-                return render_template('week_predictions.html', 
-                                     predictions=predictions, 
-                                     results=results,
-                                     current_week=week,
-                                     available_weeks=[3])
-                
-            except Exception as e:
-                logger.error(f"Database error: {e}")
-                if conn:
-                    conn.close()
+        # Get predictions
+        predictions = get_week3_predictions()
         
-        # Fallback to fresh predictions
-        try:
-            predictions = get_2025_week3_predictions()
-            return render_template('week_predictions.html', 
-                                 predictions=predictions, 
-                                 results={},
-                                 current_week=week,
-                                 available_weeks=[3])
-        except Exception as model_error:
-            logger.error(f"RIVERS Model failed in fallback: {model_error}")
-            flash(f"❌ RIVERS Model Error: {model_error}", 'error')
-            return render_template('week_predictions.html', 
-                                 predictions=[], 
-                                 results={},
-                                 current_week=week,
-                                 available_weeks=[3])
+        return render_template('week_predictions.html', 
+                             predictions=predictions,
+                             week=week,
+                             season=2025,
+                             available_weeks=[3])
         
     except Exception as e:
-        logger.error(f"Week predictions error: {e}")
-        try:
-            predictions = get_2025_week3_predictions()
-            return render_template('week_predictions.html', 
-                                 predictions=predictions, 
-                                 results={},
-                                 current_week=week,
-                                 available_weeks=[3])
-        except Exception as model_error:
-            logger.error(f"RIVERS Model failed in final fallback: {model_error}")
-            flash(f"❌ RIVERS Model Error: {model_error}", 'error')
-            return render_template('week_predictions.html', 
-                                 predictions=[], 
-                                 results={},
-                                 current_week=week,
-                                 available_weeks=[3])
+        logger.error(f"Error in week_predictions route: {e}")
+        flash("Error loading predictions. Please try again.", 'error')
+        return redirect(url_for('index'))
 
 @app.route('/update_scores/<int:week>')
 def update_scores(week):
-    """Auto update scores for a specific week - fetches REAL data from ESPN"""
+    """Auto update scores for a specific week"""
     try:
-        logger.info(f"Updating scores for Week {week} from ESPN")
+        logger.info(f"Updating scores for Week {week}")
         
-        # Fetch actual scores from ESPN
-        espn_games = fetch_nfl_scores_from_espn(week, 2025)
+        # Fetch scores from ESPN
+        scores = fetch_nfl_scores_from_espn(week)
         
-        if not espn_games:
-            flash('No completed games found for this week. Games may not have finished yet.', 'info')
+        if not scores:
+            flash("No completed games found to update.", 'info')
             return redirect(url_for('week_predictions', week=week))
         
+        # Update database with scores
         conn = get_db_connection()
-        if not conn:
-            flash('Database connection error.', 'error')
-            return redirect(url_for('week_predictions', week=week))
-        
-        added_count = 0
-        updated_count = 0
-        
-        for game in espn_games:
-            try:
-                # Check if result already exists
-                existing = conn.execute(
-                    'SELECT * FROM results WHERE week = ? AND season = 2025 AND home_team = ? AND away_team = ?',
-                    (week, game['home_team'], game['away_team'])
-                ).fetchone()
-                
-                if not existing:
-                    # Add new result
+        if conn:
+            for score in scores:
+                # Determine actual winner
+                if score['home_score'] and score['away_score']:
+                    if score['home_score'] > score['away_score']:
+                        actual_winner = score['home_team']
+                    elif score['away_score'] > score['home_score']:
+                        actual_winner = score['away_team']
+                    else:
+                        actual_winner = 'TIE'
+                    
+                    # Insert or update result
                     conn.execute('''
-                        INSERT INTO results (week, season, home_team, away_team, home_score, away_score, actual_winner)
+                        INSERT OR REPLACE INTO results 
+                        (week, season, home_team, away_team, home_score, away_score, actual_winner)
                         VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ''', (week, 2025, game['home_team'], game['away_team'], 
-                          game['home_score'], game['away_score'], game['winner']))
-                    added_count += 1
-                    logger.info(f"Added result: {game['away_team']} {game['away_score']} @ {game['home_team']} {game['home_score']}")
-                else:
-                    # Update existing result if scores changed
-                    if (existing['home_score'] != game['home_score'] or 
-                        existing['away_score'] != game['away_score'] or 
-                        existing['actual_winner'] != game['winner']):
-                        
-                        conn.execute('''
-                            UPDATE results 
-                            SET home_score = ?, away_score = ?, actual_winner = ?
-                            WHERE week = ? AND season = 2025 AND home_team = ? AND away_team = ?
-                        ''', (game['home_score'], game['away_score'], game['winner'],
-                              week, game['home_team'], game['away_team']))
-                        updated_count += 1
-                        logger.info(f"Updated result: {game['away_team']} {game['away_score']} @ {game['home_team']} {game['home_score']}")
-                
-            except Exception as e:
-                logger.error(f"Error processing game {game}: {e}")
-                continue
-        
-        conn.commit()
-        conn.close()
-        
-        if added_count > 0:
-            flash(f'Added {added_count} new game results for Week {week}!', 'success')
-        elif updated_count > 0:
-            flash(f'Updated {updated_count} game results for Week {week}!', 'success')
+                    ''', (week, 2025, score['home_team'], score['away_team'], 
+                          score['home_score'], score['away_score'], actual_winner))
+            
+            conn.commit()
+            conn.close()
+            
+            flash(f"Updated {len(scores)} game results from ESPN.", 'success')
         else:
-            flash(f'All scores for Week {week} are already up to date.', 'info')
+            flash("Database connection error.", 'error')
         
         return redirect(url_for('week_predictions', week=week))
         
     except Exception as e:
-        logger.error(f"Update scores error: {e}")
-        flash('Error updating scores from ESPN. Please try again.', 'error')
+        logger.error(f"Error updating scores: {e}")
+        flash("Error updating scores. Please try again.", 'error')
         return redirect(url_for('week_predictions', week=week))
 
 @app.route('/stats')
 def stats():
     """Display model statistics"""
     try:
-        # For now, return a simple stats page without database dependency
-        logger.info("Loading stats page - using fallback data")
-        return render_template('stats_simple.html', 
-                             total_predictions=16,
-                             correct_predictions=0,
-                             accuracy=0.0,
-                             weekly_stats=[{
-                                 'week': 3,
-                                 'season': 2025,
-                                 'predictions': [],
-                                 'total': 16,
-                                 'correct': 0,
-                                 'accuracy': 0.0
-                             }])
+        # Initialize database first
+        init_db()
         
-    except Exception as e:
-        logger.error(f"Error in stats route: {e}")
-        return render_template('stats_simple.html', 
-                             total_predictions=0,
-                             correct_predictions=0,
-                             accuracy=0.0,
-                             weekly_stats=[])
-        try:
-            # Get all predictions with results
-            stats_data = conn.execute('''
-                SELECT p.*, r.home_score, r.away_score, r.actual_winner
-                FROM predictions p
-                LEFT JOIN results r ON p.week = r.week AND p.season = r.season 
-                    AND p.home_team = r.home_team AND p.away_team = r.away_team
-                WHERE p.season = 2025
-                ORDER BY p.week, p.home_team
-            ''').fetchall()
-        except sqlite3.OperationalError as e:
-            logger.error(f"Stats database error: {e}")
-            conn.close()
-            return render_template('stats_complete.html', 
-                                 total_predictions=0,
+        conn = get_db_connection()
+        if not conn:
+            logger.error("Could not get database connection for stats")
+            return render_template('stats_simple.html', 
+                                 total_predictions=16,
                                  correct_predictions=0,
-                                 accuracy=0,
-                                 weekly_stats={})
+                                 accuracy=0.0,
+                                 weekly_stats=[{
+                                     'week': 3,
+                                     'season': 2025,
+                                     'predictions': [],
+                                     'total': 16,
+                                     'correct': 0,
+                                     'accuracy': 0.0
+                                 }])
+        
+        # Get all predictions with results
+        stats_data = conn.execute('''
+            SELECT p.*, r.home_score, r.away_score, r.actual_winner
+            FROM predictions p
+            LEFT JOIN results r ON p.week = r.week AND p.season = r.season 
+                AND p.home_team = r.home_team AND p.away_team = r.away_team
+            WHERE p.season = 2025
+            ORDER BY p.week, p.home_team
+        ''').fetchall()
+        
+        conn.close()
         
         # Calculate statistics - only count games that have been completed
         completed_games = [row for row in stats_data if row['actual_winner']]
@@ -604,33 +400,40 @@ def stats():
             if row['actual_winner']:
                 game_data['result'] = {
                     'actual_winner': row['actual_winner'],
+                    'home_score': row['home_score'],
                     'away_score': row['away_score'],
-                    'home_score': row['home_score']
+                    'correct': row['predicted_winner'] == row['actual_winner']
                 }
-                
-                # Check if prediction was correct
-                if row['predicted_winner'] == row['actual_winner']:
-                    weekly_stats[week]['correct'] += 1
-                
-                # Only count completed games in weekly totals
-                weekly_stats[week]['total'] += 1
             
             weekly_stats[week]['games'].append(game_data)
+            weekly_stats[week]['total'] += 1
+            if row['actual_winner'] and row['predicted_winner'] == row['actual_winner']:
+                weekly_stats[week]['correct'] += 1
         
-        conn.close()
+        # Calculate weekly accuracy
+        for week_data in weekly_stats.values():
+            week_data['accuracy'] = (week_data['correct'] / week_data['total'] * 100) if week_data['total'] > 0 else 0
         
-        return render_template('stats_complete.html', 
+        return render_template('stats_simple.html', 
                              total_predictions=total_predictions,
                              correct_predictions=correct_predictions,
                              accuracy=accuracy,
-                             weekly_stats=weekly_stats)
+                             weekly_stats=list(weekly_stats.values()))
+        
     except Exception as e:
-        logger.error(f"Stats page error: {e}")
-        return render_template('stats_complete.html', 
-                             total_predictions=0,
+        logger.error(f"Error in stats route: {e}")
+        return render_template('stats_simple.html', 
+                             total_predictions=16,
                              correct_predictions=0,
-                             accuracy=0,
-                             weekly_stats={})
+                             accuracy=0.0,
+                             weekly_stats=[{
+                                 'week': 3,
+                                 'season': 2025,
+                                 'predictions': [],
+                                 'total': 16,
+                                 'correct': 0,
+                                 'accuracy': 0.0
+                             }])
 
 @app.errorhandler(404)
 def not_found(error):
@@ -647,9 +450,5 @@ if __name__ == '__main__':
     # Get port from environment variable (for deployment platforms)
     port = int(os.environ.get('PORT', 8080))
     
-    print(f"🌊 The RIVERS Model - AI NFL Predictions Starting... (2025 Week 3 FRESH)")
-    print(f"📱 Visit: http://localhost:{port}")
-    print("🛑 Press Ctrl+C to stop")
-    
     # Run the app
-    app.run(debug=False, host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=False)
