@@ -277,7 +277,7 @@ def week_predictions(week):
         # Get predictions
         predictions = get_week3_predictions()
         
-        return render_template('week_predictions.html', 
+        return render_template('week_simple.html', 
                              predictions=predictions,
                              current_week=week,
                              week=week,
