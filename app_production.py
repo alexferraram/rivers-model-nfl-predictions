@@ -539,6 +539,7 @@ def stats():
         
         conn = get_db_connection()
         if not conn:
+            logger.error("Could not get database connection for stats")
             return render_template('stats_complete.html', 
                                  total_predictions=0,
                                  correct_predictions=0,
