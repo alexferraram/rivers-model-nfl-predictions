@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 3 - The RIVERS Model</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); }
+        .card-header { background: linear-gradient(135deg, #007bff, #0056b3); color: white; }
+        .btn-update { margin-bottom: 20px; }
+        .result-badge { margin-left: 10px; }
+        .result-box {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 2px solid #28a745;
+        }
+        .result-box.incorrect {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            border-color: #dc3545;
+        }
+        .result-box h6 {
+            margin-bottom: 10px;
+            color: white;
+        }
+        .result-box p {
+            margin-bottom: 5px;
+            color: white;
+        }
+        .result-status {
+            font-size: 1.1em;
+            margin-top: 10px !important;
+        }
+        .game-card { transition: transform 0.2s; }
+        .game-card:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">The RIVERS Model</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Week 3 Predictions</a>
+                <a class="nav-link" href="/stats.html">Statistics</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1>Week 3 NFL Predictions</h1>
+            <button class="btn btn-success btn-update" onclick="alert('Manual score updates coming soon!')">
+                🔄 Update Scores
+            </button>
+        </div>
+        
+        <div class="row" id="predictions-container">
+            <!-- Predictions will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        // Week 3 Predictions Data - Updated with Latest RIVERS Model Results
+        const week3Data = {
+            predictions: [
+                {
+                    'away_team': 'MIA',
+                    'home_team': 'BUF',
+                    'winner': 'BUF',
+                    'confidence': 78.2,
+                    'injury_report': 'BUF: Matt Milano (LB) - Out, Ed Oliver (DT) - Out | MIA: Storm Duck (CB) - Out, Ifeatu Melifonwu (S) - Out, Darren Waller (TE) - Out'
+                },
+                {
+                    'away_team': 'ATL',
+                    'home_team': 'CAR',
+                    'winner': 'ATL',
+                    'confidence': 62.6,
+                    'injury_report': 'CAR: Patrick Jones II (LB) - Out, Tershawn Wharton (DT) - Out | ATL: Jamal Agnew (WR) - Out, A.J. Terrell (CB) - Out, Casey Washington (WR) - Out'
+                },
+                {
+                    'away_team': 'GB',
+                    'home_team': 'CLE',
+                    'winner': 'GB',
+                    'confidence': 82.4,
+                    'injury_report': 'CLE: Mike Hall Jr. (DT) - Out | GB: Jayden Reed (WR) - Out'
+                },
+                {
+                    'away_team': 'HOU',
+                    'home_team': 'JAX',
+                    'winner': 'JAX',
+                    'confidence': 72.6,
+                    'injury_report': 'JAX: Wyatt Milum (G) - Out | HOU: Jaylin Smith (CB) - Out'
+                },
+                {
+                    'away_team': 'CIN',
+                    'home_team': 'MIN',
+                    'winner': 'CIN',
+                    'confidence': 58.0,
+                    'injury_report': 'MIN: Ryan Kelly (C) - Out, J.J. McCarthy (QB) - Out, Justin Skule (T) - Out | CIN: Shemar Stewart (DE) - Out, Cam Taylor-Britt (CB) - Doubtful, Joe Burrow (QB) - Out'
+                },
+                {
+                    'away_team': 'PIT',
+                    'home_team': 'NE',
+                    'winner': 'NE',
+                    'confidence': 61.8,
+                    'injury_report': 'NE: Christian Gonzalez (CB) - Out | PIT: DeShon Elliott (S) - Out, Alex Highsmith (LB) - Out, Joey Porter Jr. (CB) - Out, Max Scharping (G) - Out'
+                },
+                {
+                    'away_team': 'LAR',
+                    'home_team': 'PHI',
+                    'winner': 'PHI',
+                    'confidence': 60.3,
+                    'injury_report': 'PHI: Will Shipley (RB) - Out | LAR: Steve Avila (G) - Doubtful'
+                },
+                {
+                    'away_team': 'NYJ',
+                    'home_team': 'TB',
+                    'winner': 'TB',
+                    'confidence': 72.2,
+                    'injury_report': 'TB: Chris Godwin Jr. (WR) - Out, Tristan Wirfs (T) - Out | NYJ: Justin Fields (QB) - Out, Jermaine Johnson II (DE) - Out, Kene Nwangwu (RB) - Out, Josh Reynolds (WR) - Out, Jay Tufele (DT) - Out'
+                },
+                {
+                    'away_team': 'IND',
+                    'home_team': 'TEN',
+                    'winner': 'IND',
+                    'confidence': 93.3,
+                    'injury_report': 'TEN: JC Latham (T) - Out, T\'Vondre Sweat (DT) - Out, Kevin Winston Jr. (S) - Doubtful | IND: No significant injuries'
+                },
+                {
+                    'away_team': 'LV',
+                    'home_team': 'WAS',
+                    'winner': 'LV',
+                    'confidence': 56.7,
+                    'injury_report': 'WAS: John Bates (TE) - Out, Noah Brown (WR) - Out, Jayden Daniels (QB) - Out | LV: No significant injuries'
+                },
+                {
+                    'away_team': 'DEN',
+                    'home_team': 'LAC',
+                    'winner': 'LAC',
+                    'confidence': 70.5,
+                    'injury_report': 'LAC: Will Dissly (TE) - Out, Elijah Molden (S) - Out | DEN: Evan Engram (TE) - Out, Dre Greenlaw (LB) - Out'
+                },
+                {
+                    'away_team': 'NO',
+                    'home_team': 'SEA',
+                    'winner': 'SEA',
+                    'confidence': 66.2,
+                    'injury_report': 'SEA: Zach Charbonnet (RB) - Doubtful, Nick Emmanwori (S) - Doubtful, Julian Love (S) - Doubtful, Devon Witherspoon (CB) - Doubtful | NO: Dillon Radunz (G) - Out, Chase Young (DE) - Out'
+                },
+                {
+                    'away_team': 'DAL',
+                    'home_team': 'CHI',
+                    'winner': 'DAL',
+                    'confidence': 79.3,
+                    'injury_report': 'CHI: Kiran Amegadjie (G) - Out, T.J. Edwards (LB) - Out, Kyler Gordon (CB) - Out, Jaylon Johnson (CB) - Out, Jaylon Jones (CB) - Out | DAL: DaRon Bland (CB) - Out'
+                },
+                {
+                    'away_team': 'ARI',
+                    'home_team': 'SF',
+                    'winner': 'ARI',
+                    'confidence': 50.4,
+                    'injury_report': 'SF: Spencer Burford (T) - Out, Jordan Watkins (WR) - Out | ARI: Will Johnson (CB) - Doubtful'
+                },
+                {
+                    'away_team': 'KC',
+                    'home_team': 'NYG',
+                    'winner': 'KC',
+                    'confidence': 52.6,
+                    'injury_report': 'NYG: Demetrius Flannigan-Fowles (LB) - Doubtful, Darius Muasau (LB) - Out, Rakeem Nunez-Roches (DT) - Doubtful | KC: Michael Danna (DE) - Out, Kristian Fulton (CB) - Out'
+                },
+                {
+                    'away_team': 'DET',
+                    'home_team': 'BAL',
+                    'winner': 'BAL',
+                    'confidence': 50.9,
+                    'injury_report': 'BAL: Isaiah Likely (TE) - Out, Nnamdi Madubuike (DT) - Out, Patrick Ricard (FB) - Out, Kyle Van Noy (LB) - Out | DET: Marcus Davenport (DE) - Out'
+                }
+            ],
+            results: {
+                'MIA@BUF': { home_score: 31, away_score: 21, actual_winner: 'BUF' }
+            }
+        };
+
+        // Render predictions (exactly like your Flask app)
+        function renderPredictions() {
+            const container = document.getElementById('predictions-container');
+            let html = '';
+
+            week3Data.predictions.forEach(prediction => {
+                const gameKey = `${prediction.away_team}@${prediction.home_team}`;
+                const result = week3Data.results[gameKey];
+                
+                let resultBox = '';
+                if (result && result.actual_winner) {
+                    const isCorrect = prediction.winner === result.actual_winner;
+                    const resultClass = isCorrect ? 'correct' : 'incorrect';
+                    const resultText = isCorrect ? '✅ CORRECT!' : '❌ INCORRECT';
+                    
+                    resultBox = `
+                        <div class="result-box ${resultClass}">
+                            <h6><strong>📊 Game Result</strong></h6>
+                            <p><strong>Final Score:</strong> ${result.away_score} - ${result.home_score}</p>
+                            <p><strong>Predicted:</strong> ${prediction.winner} | <strong>Actual:</strong> ${result.actual_winner}</p>
+                            <p class="result-status"><strong>${resultText}</strong></p>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <div class="col-lg-6 mb-4">
+                        <div class="card game-card">
+                            <div class="card-header">
+                                <h5>🏈 ${prediction.away_team} @ ${prediction.home_team}</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>🏆 Winner:</strong> ${prediction.winner}</p>
+                                <p><strong>🎯 Confidence:</strong> ${prediction.confidence.toFixed(1)}%</p>
+                                <p><strong>🏥 Injury Report:</strong> ${prediction.injury_report}</p>
+                                ${resultBox}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            renderPredictions();
+        });
+    </script>
+</body>
+</html>
